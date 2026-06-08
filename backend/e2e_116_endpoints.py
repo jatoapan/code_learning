@@ -1,4 +1,4 @@
-import urllib.request
+import time\ntime.sleep(20)\nimport urllib.request
 import urllib.parse
 import json
 import time
@@ -174,14 +174,14 @@ if not dummy_tok: dummy_tok = req("POST", "/sessions", None, {"email":"d@d.com",
 if dummy_tok:
     req("DELETE", "/users/me", dummy_tok)
 
-req("DELETE", "/sessions/current", admin)
+req("DELETE", "/sessions/current", dummy_tok)
 
 req("GET", "/courses", stu)
 req("GET", "/professor-applications/mine", prof)
-rt_id = req("POST", "/admin/response-templates", admin, {"title":"T", "content":"C"}).get("data",{}).get("id")
+rt_id = req("POST", "/admin/response-templates", admin, {"name":"T", "content":"C"}).get("data",{}).get("id")
 if rt_id:
     req("GET", "/moderator/response-templates", admin)
-    req("PUT", f"/admin/response-templates/{rt_id}", admin, {"title":"T2"})
+    req("PUT", f"/admin/response-templates/{rt_id}", admin, {"name":"T2"})
     req("DELETE", f"/admin/response-templates/{rt_id}", admin)
 
 app_id = req("POST", "/professor-applications", stu2, {"motivation":"x", "qualifications":"y"}).get("data",{}).get("id")
