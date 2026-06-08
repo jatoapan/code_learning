@@ -40,4 +40,56 @@ class QuizQuestionController extends Controller
 
         return response()->json(['message' => 'Question added successfully', 'data' => $question], 201);
     }
+
+    public function update(Request $request, $id)
+    {
+        $question = QuizQuestion::findOrFail($id);
+        $validated = $request->validate([
+            'question_text' => 'sometimes|required|string',
+            'type' => 'sometimes|required|string|in:multiple_choice,true_false',
+            'points' => 'sometimes|required|integer|min:1',
+            'explanation' => 'nullable|string',
+        ]);
+        
+        $question->update($validated);
+        
+        return response()->json(['message' => 'Question updated successfully', 'data' => $question]);
+    }
+
+    public function destroy($id)
+    {
+        $question = QuizQuestion::findOrFail($id);
+        $question->delete();
+        
+        return response()->json(['message' => 'Question deleted successfully']);
+    }
+
+    public function updateAnswers(Request $request, $id)
+    {
+        $question = QuizQuestion::findOrFail($id);
+        $validated = $request->validate([
+            'answers' => 'required|array',
+            'answers.*.id' => 'nullable|exists:quiz_answers,id',
+            'answers.*.answer_text' => 'required|string',
+            'answers.*.is_correct' => 'required|boolean',
+        ]);
+
+        foreach ($validated['answers'] as $answerData) {
+            if (isset($answerData['id'])) {
+                $answer = \App\Models\QuizAnswer::where('question_id', $question->id)->findOrFail($answerData['id']);
+                $answer->update([
+                    'answer_text' => $answerData['answer_text'],
+                    'is_correct' => $answerData['is_correct']
+                ]);
+            } else {
+                \App\Models\QuizAnswer::create([
+                    'question_id' => $question->id,
+                    'answer_text' => $answerData['answer_text'],
+                    'is_correct' => $answerData['is_correct']
+                ]);
+            }
+        }
+
+        return response()->json(['message' => 'Answers updated successfully']);
+    }
 }
