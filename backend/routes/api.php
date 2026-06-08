@@ -6,15 +6,15 @@ Route::prefix('v1')->group(function () {
     Route::get('/health', function () { return response()->json(['status' => 'ok']); });
 
     // 4.1 Auth
-    Route::post('/users', [\App\Http\Controllers\Api\V1\AuthController::class, 'register']);
-    Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthController::class, 'login']);
-    Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthController::class, 'sendResetLink']);
-    Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthController::class, 'resetPassword']);
+    Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register']);
+    Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'login']);
+    Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'sendResetLink']);
+    Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword']);
     
     // Rutas protegidas
     Route::middleware('auth:sanctum')->group(function () {
         // Auth & Profile
-        Route::delete('/sessions/current', [\App\Http\Controllers\Api\V1\AuthController::class, 'logout']);
+        Route::delete('/sessions/current', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'logout']);
         Route::get('/user', [\App\Http\Controllers\Api\V1\UserController::class, 'me']);
         Route::put('/user', [\App\Http\Controllers\Api\V1\UserController::class, 'update']);
         Route::delete('/users/me', [\App\Http\Controllers\Api\V1\UserController::class, 'deactivate']);
