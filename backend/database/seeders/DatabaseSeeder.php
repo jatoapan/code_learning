@@ -18,6 +18,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // 0. Crear Roles del Sistema
+        $roles = ['admin', 'professor', 'ta', 'moderator', 'support', 'student'];
+        foreach ($roles as $role) {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => $role]);
+        }
+
         // 1. Crear Instituciones
         $espol = Institution::create([
             'name' => 'ESPOL',
@@ -42,6 +48,7 @@ class DatabaseSeeder extends Seeder
             'institution_id' => $bootcamp->id,
             'xp' => 1000
         ]);
+        $admin->assignRole('admin');
         
         $profesor = User::create([
             'name' => 'Profesor Python',
@@ -51,6 +58,7 @@ class DatabaseSeeder extends Seeder
             'institution_id' => $espol->id,
             'xp' => 500
         ]);
+        $profesor->assignRole('professor');
 
         $estudiante = User::create([
             'name' => 'Estudiante Autodidacta',
@@ -60,6 +68,7 @@ class DatabaseSeeder extends Seeder
             'institution_id' => null,
             'xp' => 0
         ]);
+        $estudiante->assignRole('student');
 
         // 3. Crear Curso de Prueba
         $cursoPython = Course::create([
