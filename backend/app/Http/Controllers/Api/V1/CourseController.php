@@ -44,7 +44,7 @@ class CourseController extends Controller
 
     public function show($id)
     {
-        $course = Course::with(['modules.materials', 'owner:id,name'])->findOrFail($id);
+        $course = Course::with(['modules.items.itemable', 'owner:id,name'])->findOrFail($id);
         return response()->json(['data' => $course]);
     }
 

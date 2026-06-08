@@ -21,15 +21,26 @@ class MaterialController extends Controller
             'title' => 'required|string|max:255',
             'type' => 'required|string|in:video,reading,link',
             'content' => 'required|string',
-            'estimated_minutes' => 'required|integer|min:1',
-            'is_required' => 'boolean',
+            'estimated_minutes' => 'nullable|integer',
+            'is_required' => 'nullable|boolean',
         ]);
 
         $module = Module::findOrFail($id);
 
-        $material = new Material($validated);
-        $material->module_id = $module->id;
+        $material = new Material();
+        $material->title = $validated['title'];
+        $material->type = $validated['type'];
+        $material->file_path = $validated['content']; // Usamos content como file_path para links
+        $material->creator_id = $request->user()->id;
         $material->save();
+
+        // Enlazar usando la tabla polimorfica
+        \App\Models\ModuleItem::create([
+            'module_id' => $module->id,
+            'itemable_type' => Material::class,
+            'itemable_id' => $material->id,
+            'order' => 1
+        ]);
 
         return response()->json(['message' => 'Material created successfully', 'data' => $material], 201);
     }
