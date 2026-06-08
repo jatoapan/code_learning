@@ -18,6 +18,7 @@ class InstitutionController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:255|unique:institutions',
             'domain' => 'nullable|string|max:100',
             'logo_path' => 'nullable|string|max:255',
             'website' => 'nullable|string|max:255',
@@ -33,6 +34,7 @@ class InstitutionController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
+            'slug' => 'sometimes|required|string|max:255|unique:institutions,slug,'.$id,
             'domain' => 'nullable|string|max:100',
             'logo_path' => 'nullable|string|max:255',
             'website' => 'nullable|string|max:255',

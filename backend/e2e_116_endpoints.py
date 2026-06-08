@@ -1,4 +1,5 @@
-import time\ntime.sleep(20)\nimport urllib.request
+import time
+import urllib.request
 import urllib.parse
 import json
 import time
@@ -50,8 +51,7 @@ req("GET", "/notifications/unread-count", prof)
 req("PATCH", "/notifications", prof, {})
 
 print("\n--- ADMIN & SUPPORT ---")
-req("GET", "/institutions", stu)
-inst_res = req("POST", "/admin/institutions", admin, {"name":"MIT", "type":"University"})
+inst_res = req("POST", "/admin/institutions", admin, {"name": "Test University", "slug": "test-uni", "type": "university"})
 inst_id = inst_res.get("data", {}).get("id", "")
 if inst_id:
     req("PUT", f"/admin/institutions/{inst_id}", admin, {"name":"MIT Edit", "type":"University"})
@@ -169,8 +169,8 @@ print("\n--- ENDPOINTS RESTANTES FASE 2 ---")
 req("POST", "/password-reset-links", None, {"email":"admin@prolecom.com"})
 req("POST", "/password-resets", None, {"email":"admin@prolecom.com", "token":"fake", "password":"password123", "password_confirmation":"password123"})
 
-dummy_tok = req("POST", "/sessions", None, {"email":"d@d.com", "password":"p", "device_name":"x"}).get("data",{}).get("token", "")
-if not dummy_tok: dummy_tok = req("POST", "/sessions", None, {"email":"d@d.com", "password":"p", "device_name":"x"}).get("token", "")
+dummy_res = req("POST", "/users", None, {"name":"D", "email":"d@d.com", "password":"password123", "password_confirmation":"password123"})
+dummy_tok = req("POST", "/sessions", None, {"email":"d@d.com", "password":"password123", "device_name":"x"}).get("token", "")
 if dummy_tok:
     req("DELETE", "/users/me", dummy_tok)
 
@@ -178,17 +178,17 @@ req("DELETE", "/sessions/current", dummy_tok)
 
 req("GET", "/courses", stu)
 req("GET", "/professor-applications/mine", prof)
-rt_id = req("POST", "/admin/response-templates", admin, {"name":"T", "content":"C"}).get("data",{}).get("id")
+rt_id = req("POST", "/admin/response-templates", admin, {"title":"T", "body":"C"}).get("data",{}).get("id")
 if rt_id:
     req("GET", "/moderator/response-templates", admin)
-    req("PUT", f"/admin/response-templates/{rt_id}", admin, {"name":"T2"})
+    req("PUT", f"/admin/response-templates/{rt_id}", admin, {"title":"T2"})
     req("DELETE", f"/admin/response-templates/{rt_id}", admin)
 
 app_id = req("POST", "/professor-applications", stu2, {"motivation":"x", "qualifications":"y"}).get("data",{}).get("id")
 if app_id:
     req("PATCH", f"/professor-applications/{app_id}/assign", admin, {"reviewer_id": 1})
 
-stu_id = req("GET", "/user", stu).get("data", {}).get("id", 1)
+stu_id = req("GET", "/user", stu).get("id", 1)
 req("GET", "/support/users", admin)
 req("GET", f"/support/users/{stu_id}", admin)
 req("PUT", f"/support/users/{stu_id}/role", admin, {"roles":["student"]})

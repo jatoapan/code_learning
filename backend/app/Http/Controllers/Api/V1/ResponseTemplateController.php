@@ -17,8 +17,8 @@ class ResponseTemplateController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'content' => 'required|string',
+            'title' => 'required|string|max:255',
+            'body' => 'required|string',
         ]);
 
         $template = ResponseTemplate::create($validated);
@@ -35,8 +35,8 @@ class ResponseTemplateController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'content' => 'sometimes|required|string',
+            'title' => 'sometimes|required|string|max:255',
+            'body' => 'sometimes|required|string',
         ]);
 
         $template = ResponseTemplate::findOrFail($id);
