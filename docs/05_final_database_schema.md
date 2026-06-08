@@ -58,3 +58,7 @@ This document outlines the final structure of the 28 core database tables (plus 
   - Contains `type`, `data`, `read_at`.
 
 *(Note: The Endorsements table was removed. Endorsement tracking is handled via `moderator_endorsed_at` timestamps on Materials, Threads, and Posts.)*
+
+## 7. Caching & Infrastructure Notes
+- **Idempotency Keys**: Handled completely in-memory (Cache/Redis) by the custom `Idempotency` middleware. No SQL table is used for this to ensure maximum speed (sub-15ms response times). Responses are cached for 24 hours based on the `Idempotency-Key` header.
+- **Rate Limiting**: Throttling counters (e.g., 5 req/min for Auth, 10 req/min for Judge0) are also managed directly in the Application Cache, completely bypassing the SQL Database for optimal performance.
