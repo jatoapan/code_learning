@@ -47,4 +47,31 @@ class QuizController extends Controller
         $quiz = Quiz::with('questions')->findOrFail($id);
         return response()->json(['data' => $quiz]);
     }
+
+    public function update(Request $request, $id)
+    {
+        $quiz = Quiz::findOrFail($id);
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string',
+            'mode' => 'sometimes|required|string|in:practice,exam',
+            'time_limit_minutes' => 'nullable|integer',
+            'passing_score' => 'sometimes|required|integer|min:0|max:100',
+        ]);
+
+        if (isset($validated['time_limit_minutes'])) {
+            $validated['time_limit'] = $validated['time_limit_minutes'];
+            unset($validated['time_limit_minutes']);
+        }
+
+        $quiz->update($validated);
+        return response()->json(['message' => 'Quiz updated successfully', 'data' => $quiz]);
+    }
+
+    public function destroy($id)
+    {
+        $quiz = Quiz::findOrFail($id);
+        $quiz->delete();
+        return response()->json(['message' => 'Quiz deleted successfully']);
+    }
 }
