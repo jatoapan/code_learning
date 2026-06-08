@@ -21,6 +21,7 @@ class ForumPostController extends Controller
         $post->body = $validated['body'];
         $post->user_id = $request->user()->id;
         $post->thread_id = $thread->id;
+        $post->status = \App\Enums\PostStatus::Visible->value;
         $post->save();
 
         return response()->json(['message' => 'Post created successfully', 'data' => $post], 201);
