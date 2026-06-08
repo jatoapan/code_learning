@@ -17,6 +17,7 @@ return new class extends Migration
             $table->boolean('is_accepted_answer')->default(false);
             $table->integer('vote_score')->default(0);
             $table->string('status', 50);
+            $table->timestamp('moderator_endorsed_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

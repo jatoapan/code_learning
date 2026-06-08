@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('is_pinned')->default(false);
             $table->integer('vote_score')->default(0);
             $table->unsignedInteger('view_count')->default(0);
+            $table->timestamp('moderator_endorsed_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
