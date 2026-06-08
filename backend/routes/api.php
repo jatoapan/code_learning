@@ -71,6 +71,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('/posts/{id}', [\App\Http\Controllers\Api\V1\ForumPostController::class, 'destroy']);
         Route::put('/threads/{id}/votes/me', [\App\Http\Controllers\Api\V1\VoteController::class, 'voteThread']);
         Route::put('/posts/{id}/votes/me', [\App\Http\Controllers\Api\V1\VoteController::class, 'votePost']);
+        Route::patch('/posts/{id}/accept', [\App\Http\Controllers\Api\V1\ForumPostController::class, 'acceptAnswer']);
 
         // 4.9 Challenges & IDE
         Route::get('/languages', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'languages']);
@@ -113,8 +114,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/modules/{id}/materials', [\App\Http\Controllers\Api\V1\MaterialController::class, 'store']);
             Route::put('/materials/{id}', [\App\Http\Controllers\Api\V1\MaterialController::class, 'update']);
             Route::delete('/materials/{id}', [\App\Http\Controllers\Api\V1\MaterialController::class, 'destroy']);
-            
-            Route::patch('/posts/{id}/accept', [\App\Http\Controllers\Api\V1\ForumPostController::class, 'acceptAnswer']);
             
             Route::get('/modules/{id}/challenges', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'indexByModule']);
             Route::post('/modules/{id}/challenges', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'store']);
