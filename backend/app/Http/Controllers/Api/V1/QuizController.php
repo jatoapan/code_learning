@@ -74,4 +74,29 @@ class QuizController extends Controller
         $quiz->delete();
         return response()->json(['message' => 'Quiz deleted successfully']);
     }
+
+    public function submit(Request $request, $id)
+    {
+        $quiz = Quiz::findOrFail($id);
+        $validated = $request->validate([
+            'answers' => 'required|array'
+        ]);
+
+        $attempt = \App\Models\QuizAttempt::create([
+            'quiz_id' => $quiz->id,
+            'user_id' => $request->user()->id,
+            'score' => 0,
+            'status' => 'completed',
+            'started_at' => now(),
+            'completed_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Attempt submitted', 'data' => $attempt], 201);
+    }
+
+    public function showAttempt($id)
+    {
+        $attempt = \App\Models\QuizAttempt::findOrFail($id);
+        return response()->json(['data' => $attempt]);
+    }
 }

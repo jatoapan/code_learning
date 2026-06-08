@@ -116,7 +116,7 @@ if c_id and m_id:
 
 print("\n--- MODERATION ---")
 if th_id:
-    rep_res = req("POST", "/reports", stu2, {"reportable_type":"thread", "reportable_id":th_id, "reason":"spam", "details":"x"})
+    rep_res = req("POST", "/reports", stu2, {"reportable_type":"App\\\\Models\\\\ForumThread", "reportable_id":th_id, "reason":"spam", "details":"x"})
     rep_id = rep_res.get("data", {}).get("id", "")
     if rep_id:
         req("GET", "/moderator/reports", admin)
