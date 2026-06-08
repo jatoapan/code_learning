@@ -11,6 +11,12 @@ Route::prefix('v1')->group(function () {
         ]); 
     });
 
+    // BOTON NUCLEAR TEMPORAL: Resetea y siembra la DB sin ir a la consola
+    Route::get('/dev-reset-db', function () {
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
+        return response()->json(['message' => 'Base de datos destruida y re-sembrada exitosamente con roles y UUIDs.']);
+    });
+
     // 4.1 Auth
     Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register']);
     Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'login']);
