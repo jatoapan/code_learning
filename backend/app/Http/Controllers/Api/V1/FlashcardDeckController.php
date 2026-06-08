@@ -3,53 +3,35 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Module;
+use App\Models\FlashcardDeck;
+use App\Models\ModuleItem;
 use Illuminate\Http\Request;
 
 class FlashcardDeckController extends Controller
 {
-    public function index()
-    {
-        return response()->json(['message' => 'List flashcard decks']);
-    }
-
-    public function store(Request $request)
+    public function store(Request $request, $moduleId)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
         ]);
 
-        return response()->json([
-            'message' => 'Flashcard deck created successfully',
-            'data' => $validated
-        ], 201);
-    }
+        $module = Module::findOrFail($moduleId);
 
-    public function show($id)
-    {
-        return response()->json(['message' => 'Show flashcard deck details', 'deck_id' => $id]);
-    }
+        $deck = new FlashcardDeck();
+        $deck->title = $validated['title'];
+        $deck->description = $validated['description'] ?? null;
+        $deck->creator_id = $request->user()->id;
+        $deck->save();
 
-    public function update(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string'
+        ModuleItem::create([
+            'module_id' => $module->id,
+            'itemable_type' => FlashcardDeck::class,
+            'itemable_id' => $deck->id,
+            'order' => 1
         ]);
 
-        return response()->json([
-            'message' => 'Flashcard deck updated successfully',
-            'data' => $validated
-        ]);
-    }
-
-    public function destroy($id)
-    {
-        return response()->json(['message' => 'Flashcard deck deleted successfully'], 204);
-    }
-
-    public function dueFlashcards($id)
-    {
-        return response()->json(['message' => 'List due flashcards for deck', 'deck_id' => $id]);
+        return response()->json(['message' => 'Deck created successfully', 'data' => $deck], 201);
     }
 }

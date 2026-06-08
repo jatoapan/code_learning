@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\FlashcardDeck;
+use App\Models\Flashcard;
 use Illuminate\Http\Request;
 
 class FlashcardController extends Controller
@@ -10,57 +12,18 @@ class FlashcardController extends Controller
     public function store(Request $request, $deckId)
     {
         $validated = $request->validate([
-            'question_text' => 'required|string',
-            'answer_text' => 'required|string'
+            'front_content' => 'required|string',
+            'back_content' => 'required|string',
         ]);
 
-        return response()->json([
-            'message' => 'Flashcard created successfully',
-            'deck_id' => $deckId,
-            'data' => $validated
-        ], 201);
-    }
+        $deck = FlashcardDeck::findOrFail($deckId);
 
-    public function update(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'question_text' => 'sometimes|required|string',
-            'answer_text' => 'sometimes|required|string'
-        ]);
+        $flashcard = new Flashcard();
+        $flashcard->deck_id = $deck->id;
+        $flashcard->front_content = $validated['front_content'];
+        $flashcard->back_content = $validated['back_content'];
+        $flashcard->save();
 
-        return response()->json([
-            'message' => 'Flashcard updated successfully',
-            'data' => $validated
-        ]);
-    }
-
-    public function destroy($id)
-    {
-        return response()->json(['message' => 'Flashcard deleted successfully'], 204);
-    }
-
-    public function import(Request $request)
-    {
-        $validated = $request->validate([
-            'attempt_id' => 'required|integer',
-            'deck_id' => 'required|integer'
-        ]);
-
-        return response()->json([
-            'message' => 'Flashcards imported from attempt successfully',
-            'data' => $validated
-        ], 201);
-    }
-
-    public function rate(Request $request, $id)
-    {
-        $validated = $request->validate([
-            'rating' => 'required|string|in:easy,good,hard,again'
-        ]);
-
-        return response()->json([
-            'message' => 'Flashcard rated and SRS parameters recalculated',
-            'data' => $validated
-        ]);
+        return response()->json(['message' => 'Flashcard added successfully', 'data' => $flashcard], 201);
     }
 }
