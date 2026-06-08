@@ -100,13 +100,14 @@ class QuizController extends Controller
         return response()->json(['data' => $attempt]);
     }
 
-    public function generatePracticeQuiz(Request $request, $id)
+    public function generatePracticeQuiz(Request $request)
     {
-        $quiz = Quiz::findOrFail($id);
         $validated = $request->validate([
+            'quiz_id' => 'required|exists:quizzes,id',
             'question_count' => 'nullable|integer|min:1'
         ]);
 
+        $quiz = Quiz::findOrFail($validated['quiz_id']);
         $count = $validated['question_count'] ?? 10;
 
         $questions = \App\Models\QuizQuestion::where('quiz_id', $quiz->id)
