@@ -22,7 +22,7 @@ class FlashcardDeckController extends Controller
         $deck = new FlashcardDeck();
         $deck->title = $validated['title'];
         $deck->description = $validated['description'] ?? null;
-        $deck->creator_id = $request->user()->id;
+        $deck->user_id = $request->user()->id;
         $deck->save();
 
         ModuleItem::create([

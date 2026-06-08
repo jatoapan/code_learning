@@ -27,10 +27,9 @@ class QuizController extends Controller
         $quiz->title = $validated['title'];
         $quiz->description = $validated['description'] ?? null;
         $quiz->mode = $validated['mode'];
-        $quiz->time_limit_minutes = $validated['time_limit_minutes'] ?? null;
+        $quiz->time_limit = $validated['time_limit_minutes'] ?? null;
         $quiz->passing_score = $validated['passing_score'];
         $quiz->status = QuizStatus::Draft->value;
-        $quiz->creator_id = $request->user()->id;
         $quiz->save();
 
         ModuleItem::create([
