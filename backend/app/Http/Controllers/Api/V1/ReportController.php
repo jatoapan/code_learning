@@ -44,7 +44,7 @@ class ReportController extends Controller
     {
         $report = Report::findOrFail($id);
         $report->status = ReportStatus::Resolved->value;
-        $report->resolver_id = $request->user()->id;
+        $report->resolved_by = $request->user()->id;
         $report->resolved_at = now();
         $report->save();
 
