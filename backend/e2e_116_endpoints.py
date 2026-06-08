@@ -54,15 +54,15 @@ print("\n--- ADMIN & SUPPORT ---")
 inst_res = req("POST", "/admin/institutions", admin, {"name": "Test University", "slug": "test-uni", "type": "university"})
 inst_id = inst_res.get("data", {}).get("id", "")
 if inst_id:
-    req("PUT", f"/admin/institutions/{inst_id}", admin, {"name":"MIT Edit", "type":"University"})
+    req("PUT", f"/admin/institutions/{inst_id}", admin, {"name":"MIT Edit", "type":"university"})
     req("GET", f"/admin/institutions/{inst_id}/analytics", admin)
 req("GET", "/admin/logs", admin)
 req("GET", "/admin/settings", admin)
 req("PUT", "/admin/settings/max_upload_mb", admin, {"value": "100"})
-rt_res = req("POST", "/admin/response-templates", admin, {"name":"T1", "content":"body"})
+rt_res = req("POST", "/admin/response-templates", admin, {"title":"T1", "body":"body"})
 rt_id = rt_res.get("data", {}).get("id", "")
 if rt_id:
-    req("PUT", f"/admin/response-templates/{rt_id}", admin, {"name":"T1 Edit", "content":"report"})
+    req("PUT", f"/admin/response-templates/{rt_id}", admin, {"title":"T1 Edit", "body":"report"})
     req("GET", "/moderator/response-templates", admin)
 
 app_res = req("POST", "/professor-applications", stu2, {"motivation":"hire me", "qualifications":"dev"})
@@ -174,7 +174,7 @@ dummy_tok = req("POST", "/sessions", None, {"email":"d@d.com", "password":"passw
 if dummy_tok:
     req("DELETE", "/users/me", dummy_tok)
 
-req("DELETE", "/sessions/current", dummy_tok)
+req("DELETE", "/sessions/current", stu2)
 
 req("GET", "/courses", stu)
 req("GET", "/professor-applications/mine", prof)
@@ -195,9 +195,9 @@ req("PUT", f"/support/users/{stu_id}/role", admin, {"roles":["student"]})
 req("PATCH", f"/support/users/{stu_id}/deactivate", admin, {})
 req("GET", "/admin/institutions/1/analytics", admin)
 
-req("POST", f"/courses/{cr_id}/enrollments/manual", prof, {"user_id": stu_id})
-req("POST", f"/courses/{cr_id}/staff-members", prof, {"user_id": stu_id, "role":"ta"})
-req("DELETE", f"/courses/{cr_id}/staff/{stu_id}", prof)
+req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu_id})
+req("POST", f"/courses/{c_id}/staff-members", prof, {"user_id": stu_id, "role":"ta"})
+req("DELETE", f"/courses/{c_id}/staff/{stu_id}", prof)
 
 if po_id: req("PATCH", f"/posts/{po_id}/accept", prof, {})
 if rep_id: req("PATCH", f"/reports/{rep_id}/escalate", admin, {})
