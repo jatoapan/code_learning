@@ -24,6 +24,18 @@ The API natively uses Laravel's standardized JSON responses. Frontend developers
 - **`429 Too Many Requests`**: Rate limiting exceeded (e.g., spamming Judge0 or Login).
 - **`500 Internal Server Error`**: Unexpected backend failure.
 
+## Constrained Values (Enums)
+When sending JSON payloads, ensure you use the exact string values expected by the database enumerations. Sending unmapped values will result in a `422 Unprocessable Entity` error.
+- **Roles** (for enrollment/support): `student`, `ta`, `professor`, `moderator`, `support`, `admin`.
+- **Course Status**: `draft`, `public`, `archived`.
+- **Material Type**: `pdf`, `video_link`, `external_link`.
+- **Challenge Difficulty**: `easy`, `medium`, `hard`.
+- **Quiz Mode**: `practice`, `exam`.
+- **Question Type**: `multiple_choice`, `true_false`, `fill_in_blank`.
+- **Thread Status**: `open`, `resolved`, `closed`.
+- **Report Status**: `pending`, `resolved`, `escalated`.
+- **Vote Values**: `1` (Upvote) or `-1` (Downvote).
+
 ---
 
 ## 1. Global & Dev
