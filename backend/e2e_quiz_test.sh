@@ -63,7 +63,7 @@ CARD_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/flashc
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer $TOKEN" \
-     -d '{"front_content":"¿PHP?","back_content":"Lenguaje de servidor"}')
+     -d '{"question_text":"¿PHP?","answer_text":"Lenguaje de servidor"}')
 echo "   -> HTTP $CARD_STATUS"
 
 echo "================================================="

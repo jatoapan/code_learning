@@ -12,16 +12,16 @@ class FlashcardController extends Controller
     public function store(Request $request, $deckId)
     {
         $validated = $request->validate([
-            'front_content' => 'required|string',
-            'back_content' => 'required|string',
+            'question_text' => 'required|string',
+            'answer_text' => 'required|string',
         ]);
 
         $deck = FlashcardDeck::findOrFail($deckId);
 
         $flashcard = new Flashcard();
         $flashcard->deck_id = $deck->id;
-        $flashcard->front_content = $validated['front_content'];
-        $flashcard->back_content = $validated['back_content'];
+        $flashcard->question_text = $validated['question_text'];
+        $flashcard->answer_text = $validated['answer_text'];
         $flashcard->save();
 
         return response()->json(['message' => 'Flashcard added successfully', 'data' => $flashcard], 201);
