@@ -64,7 +64,7 @@ MODULE_BODY=$(echo "$MODULE_RESP" | head -n -1)
 MODULE_STATUS=$(echo "$MODULE_RESP" | tail -n 1)
 echo "   -> HTTP $MODULE_STATUS"
 
-MODULE_ID=$(echo "$MODULE_BODY" | grep -o '"id":"[^"]*' | head -1 | cut -d'"' -f4)
+MODULE_ID=$(echo "$MODULE_BODY" | grep -oP '"id":\s*"?\K[^",}]+' | head -1)
 if [ -n "$MODULE_ID" ]; then
     echo "✅ Modulo guardado en BD con UUID: $MODULE_ID"
 
@@ -73,7 +73,7 @@ if [ -n "$MODULE_ID" ]; then
          -H "Accept: application/json" \
          -H "Content-Type: application/json" \
          -H "Authorization: Bearer $TOKEN" \
-         -d '{"title":"Video Intro", "type":"video", "content":"https://youtube.com/watch?v=mock", "estimated_minutes":15, "is_required":true}')
+         -d '{"title":"Video Intro", "type":"video_link", "content":"https://youtube.com/watch?v=mock", "estimated_minutes":15, "is_required":true}')
     echo "   -> HTTP $MAT_STATUS"
 else
     echo "❌ Fallo al crear o extraer el modulo."

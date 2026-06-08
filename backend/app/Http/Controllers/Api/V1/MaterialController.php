@@ -19,7 +19,7 @@ class MaterialController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'required|string|in:video,reading,link',
+            'type' => 'required|string|in:pdf,video_link,ppt,pptx',
             'content' => 'required|string',
             'estimated_minutes' => 'nullable|integer',
             'is_required' => 'nullable|boolean',
@@ -50,7 +50,7 @@ class MaterialController extends Controller
         $material = Material::findOrFail($id);
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
-            'type' => 'sometimes|required|string|in:video,reading,link',
+            'type' => 'sometimes|required|string|in:pdf,video_link,ppt,pptx',
             'content' => 'sometimes|required|string',
             'estimated_minutes' => 'sometimes|required|integer|min:1',
             'is_required' => 'boolean',
