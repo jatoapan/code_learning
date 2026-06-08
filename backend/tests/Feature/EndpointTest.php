@@ -41,6 +41,9 @@ class EndpointTest extends TestCase
             // Sustitución de parámetros dinámicos ({id}, {user_id}, etc.) por valor dummy 1
             $uriWithDummy = preg_replace('/\{[a-zA-Z0-9_]+\}/', '1', $uri);
 
+            // Feedback visual en la consola (previene la sensación de cuelgue)
+            echo "   -> Auditando [$method] /$uriWithDummy ...\n";
+
             // 4. Ejecución usando Helpers Nativos Strictos (getJson, postJson)
             $response = match ($method) {
                 'GET', 'HEAD' => $this->actingAs($admin)->getJson($uriWithDummy),
