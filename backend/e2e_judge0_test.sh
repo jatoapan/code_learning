@@ -13,17 +13,20 @@ LOGIN_RESP=$(curl -s -X POST "${BASE_URL}/sessions" \
      -d '{"email":"profesor@espol.edu.ec", "password":"password123", "device_name":"e2e"}')
 PROF_TOKEN=$(echo $LOGIN_RESP | grep -oP '"token":"\K[^"]+')
 
-COURSE_ID=$(curl -s -X GET "${BASE_URL}/courses" -H "Authorization: Bearer $PROF_TOKEN" | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
-MOD_ID=$(curl -s -X POST "${BASE_URL}/courses/$COURSE_ID/modules" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer $PROF_TOKEN" -d '{"title":"Modulo Algoritmos", "description":"x"}' | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
+COURSE_ID=$(curl -s -X GET "${BASE_URL}/courses" -H "Accept: application/json" -H "Authorization: Bearer $PROF_TOKEN" | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
+echo "   -> Curso ID: $COURSE_ID"
+MOD_ID=$(curl -s -X POST "${BASE_URL}/courses/$COURSE_ID/modules" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer $PROF_TOKEN" -d '{"title":"Modulo Algoritmos", "description":"x", "order":1}' | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
+echo "   -> Modulo ID: $MOD_ID"
 
 echo -e "\n[2] Creando Reto de Codigo..."
 CHALLENGE_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/modules/$MOD_ID/challenges" \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer $PROF_TOKEN" \
-     -d '{"title":"Suma Simple", "description":"Suma dos numeros separados por espacio", "difficulty":"beginner", "points":10}')
+     -d '{"title":"Suma Simple", "description":"Suma dos numeros separados por espacio", "difficulty":"easy", "points":10, "language_id":71, "language_name":"python"}')
 CHALLENGE_BODY=$(echo "$CHALLENGE_RESP" | head -n -1)
 CHALLENGE_STATUS=$(echo "$CHALLENGE_RESP" | tail -n 1)
+echo "   -> Body: $CHALLENGE_BODY"
 CHAL_ID=$(echo "$CHALLENGE_BODY" | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
 echo "   -> HTTP $CHALLENGE_STATUS"
 
