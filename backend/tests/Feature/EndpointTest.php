@@ -5,32 +5,29 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
+use PHPUnit\Framework\Attributes\Test;
 
 class EndpointTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * Valida dinámicamente que ninguno de los 120 endpoints de la API arroje error >= 500.
-     *
-     * @return void
-     */
-    public function test_all_api_endpoints_do_not_crash()
+    #[Test]
+    public function all_api_endpoints_do_not_crash(): void
     {
-        // Preparar entorno base
+        // 1. Preparar entorno base (Base de datos en memoria para el test)
         $this->artisan('db:seed');
-        $admin = User::where('email', 'admin@prolecom.com')->first();
-        if (!$admin) {
-            $admin = User::factory()->create(['status' => 'active', 'xp' => 100]);
-        }
+        $admin = User::where('email', 'admin@prolecom.com')->first() 
+                 ?? User::factory()->create(['status' => 'active', 'xp' => 100]);
 
-        // Falsificar llamadas HTTP externas (ej. Judge0) para que el test no se cuelgue esperando respuesta
-        \Illuminate\Support\Facades\Http::fake();
+        // 2. Falsificar llamadas externas (ej. Judge0) estrictamente dentro del contexto del test
+        Http::fake();
 
         $routes = Route::getRoutes();
         $failedRoutes = [];
 
+        // 3. Evaluar dinámicamente
         foreach ($routes as $route) {
             $uri = $route->uri();
 
@@ -44,17 +41,27 @@ class EndpointTest extends TestCase
             // Sustitución de parámetros dinámicos ({id}, {user_id}, etc.) por valor dummy 1
             $uriWithDummy = preg_replace('/\{[a-zA-Z0-9_]+\}/', '1', $uri);
 
-            // Ejecución pura mediante $this->json()
-            $response = $this->actingAs($admin)->json($method, $uriWithDummy, []);
+            // 4. Ejecución usando Helpers Nativos Strictos (getJson, postJson)
+            $response = match ($method) {
+                'GET', 'HEAD' => $this->actingAs($admin)->getJson($uriWithDummy),
+                'POST' => $this->actingAs($admin)->postJson($uriWithDummy, []),
+                'PUT', 'PATCH' => $this->actingAs($admin)->putJson($uriWithDummy, []),
+                'DELETE' => $this->actingAs($admin)->deleteJson($uriWithDummy),
+                default => null,
+            };
+
+            if (!$response) {
+                continue;
+            }
 
             // Reporte claro si el status es >= 500 (Fatal Error/Crash)
             if ($response->status() >= 500) {
-                $content = substr($response->getContent(), 0, 300); // Muestra los primeros 300 caracteres del error
+                $content = substr($response->getContent(), 0, 300);
                 $failedRoutes[] = "❌ FAIL: [$method] /$uriWithDummy => HTTP " . $response->status() . "\n   Detalle: " . $content;
             }
         }
 
-        // Si fallan rutas, PHPUnit detendrá la prueba y arrojará el listado explícito
+        // 5. Aserción final requerida por PHPUnit 11
         $this->assertEmpty($failedRoutes, "CRASH DETECTADO EN LA API:\n\n" . implode("\n\n", $failedRoutes));
     }
 }
