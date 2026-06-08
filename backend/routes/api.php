@@ -19,12 +19,12 @@ Route::prefix('v1')->group(function () {
 
     // 4.1 Auth
     Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register']);
-    Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'login']);
+    Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'login'])->middleware('throttle:5,1');
     Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'sendResetLink']);
-    Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword']);
+    Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword'])->middleware('throttle:5,1');
     
     // Rutas protegidas
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', \App\Http\Middleware\Idempotency::class])->group(function () {
         // Auth & Profile
         Route::delete('/sessions/current', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'logout']);
         Route::get('/user', [\App\Http\Controllers\Api\V1\UserController::class, 'me']);
@@ -76,7 +76,7 @@ Route::prefix('v1')->group(function () {
         // 4.9 Challenges & IDE
         Route::get('/languages', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'languages']);
         Route::get('/challenges/{id}', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'show']);
-        Route::post('/challenges/{id}/attempts', [\App\Http\Controllers\Api\V1\ChallengeAttemptController::class, 'submit']);
+        Route::post('/challenges/{id}/attempts', [\App\Http\Controllers\Api\V1\ChallengeAttemptController::class, 'submit'])->middleware('throttle:10,1');
         Route::get('/challenges/{id}/attempts', [\App\Http\Controllers\Api\V1\ChallengeAttemptController::class, 'index']);
 
         // 4.10 Quizzes & Flashcards

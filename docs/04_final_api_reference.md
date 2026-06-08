@@ -1,0 +1,178 @@
+# Prolecom API Reference
+
+## Global Instructions
+- **Authentication**: Most endpoints require a Bearer Token. Send the header `Authorization: Bearer <your_token>`.
+- **Content-Type**: For POST, PUT, PATCH requests, send `Content-Type: application/json`.
+- **Accept**: All endpoints return JSON, so send `Accept: application/json`.
+- **Primary Keys**: Many primary keys (like `Users`, `Courses`, `Challenges`, `Threads`, `Posts`) use **UUIDs** (version 4). Always expect strings for these IDs instead of integers.
+- **Judge0 Integration**: Gamification and challenge endpoints automatically wrap around the Judge0 API behind the scenes. You simply submit the code and language ID to our endpoints, and we handle the sandboxed execution.
+
+---
+
+## 1. Global & Dev
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/health` | Public | None |
+| GET | `/api/v1/ping-deploy` | Public | None |
+| GET | `/api/v1/dev-reset-db` | Public | Temporarily seeds the DB with roles/UUIDs |
+
+## 2. Authentication & Profile
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| POST | `/api/v1/users` | Public | `{"name":"Stu2", "email":"stu2@g.com", "password":"password123", "password_confirmation":"password123"}` |
+| POST | `/api/v1/sessions` | Public | `{"email":"estudiante@gmail.com", "password":"password123", "device_name":"e2e"}` |
+| POST | `/api/v1/password-reset-links` | Public | `{"email":"admin@prolecom.com"}` |
+| POST | `/api/v1/password-resets` | Public | `{"email":"...", "token":"...", "password":"...", "password_confirmation":"..."}` |
+| DELETE| `/api/v1/sessions/current` | Any Auth | Logout |
+| GET | `/api/v1/user` | Any Auth | Returns current user profile |
+| PUT | `/api/v1/user` | Any Auth | `{"name":"New Name"}` |
+| DELETE| `/api/v1/users/me` | Any Auth | Deactivate own account |
+
+## 3. Institutions (Admin)
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/institutions` | Any Auth | None |
+| POST | `/api/v1/admin/institutions` | Admin | `{"name":"Uni", "slug":"uni", "type":"university"}` |
+| PUT | `/api/v1/admin/institutions/{id}` | Admin | `{"name":"Uni Edit", "type":"university"}` |
+| DELETE| `/api/v1/admin/institutions/{id}` | Admin | None |
+| GET | `/api/v1/admin/institutions/{id}/analytics` | Admin | None |
+
+## 4. Admin & Support Features
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/admin/logs` | Admin | Activity logs |
+| GET | `/api/v1/admin/settings` | Admin | List system settings |
+| PUT | `/api/v1/admin/settings/{key}` | Admin | `{"value":"100"}` |
+| POST | `/api/v1/admin/response-templates` | Admin | `{"title":"T1", "body":"body"}` |
+| PUT | `/api/v1/admin/response-templates/{id}`| Admin | `{"title":"T1 Edit", "body":"report"}` |
+| DELETE| `/api/v1/admin/response-templates/{id}`| Admin | None |
+| GET | `/api/v1/moderator/response-templates`| Moderator/Admin | None |
+| GET | `/api/v1/support/users` | Support/Admin | None |
+| GET | `/api/v1/support/users/{id}` | Support/Admin | None |
+| PATCH | `/api/v1/support/users/{id}/deactivate`| Support/Admin | None |
+| PUT | `/api/v1/support/users/{id}/role` | Support/Admin | `{"roles":["student"]}` |
+
+## 5. Professor Applications
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| POST | `/api/v1/professor-applications` | Any Auth | `{"motivation":"hire me", "qualifications":"dev"}` |
+| GET | `/api/v1/professor-applications/mine`| Any Auth | None |
+| GET | `/api/v1/professor-applications` | Support/Admin | List applications |
+| PATCH | `/api/v1/professor-applications/{id}/assign` | Support/Admin | `{"reviewer_id": 1}` |
+| PATCH | `/api/v1/professor-applications/{id}/review` | Support/Admin | `{"status":"approved"}` |
+
+## 6. Courses & Syllabus
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/courses` | Any Auth | None |
+| GET | `/api/v1/courses/{id}` | Any Auth | Course ID is UUID |
+| POST | `/api/v1/courses` | Professor/TA | `{"title":"C1", "description":"x", "status":"public", "category":"programming"}` |
+| PUT | `/api/v1/courses/{id}` | Professor/TA | `{"title":"C1 Edit", "status":"public", "category":"programming"}` |
+| DELETE| `/api/v1/courses/{id}` | Professor/TA | None |
+| POST | `/api/v1/courses/{id}/enrollments` | Any Auth | Enroll self |
+| DELETE| `/api/v1/courses/{id}/enrollments/me` | Any Auth | Drop course |
+| POST | `/api/v1/courses/{id}/enrollments/manual`| Professor/TA | `{"user_id": "uuid", "role": "student"}` **Note:** `role: "student"` is required. |
+| GET | `/api/v1/courses/{id}/progress` | Any Auth | Get own progress |
+| GET | `/api/v1/courses/{id}/leaderboard` | Any Auth | Gamification leaderboard |
+| GET | `/api/v1/courses/{id}/stats` | Professor/TA | None |
+| GET | `/api/v1/courses/{id}/analytics` | Professor/TA | None |
+| POST | `/api/v1/courses/{id}/staff-members` | Professor/TA | `{"user_id": "uuid", "role":"ta"}` |
+| DELETE| `/api/v1/courses/{id}/staff/{user_id}`| Professor/TA | None |
+
+### Modules & Materials
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| POST | `/api/v1/courses/{id}/modules` | Professor/TA | `{"title":"M1", "description":"x", "order":1}` |
+| PUT | `/api/v1/modules/{id}` | Professor/TA | `{"title":"M1 Edit"}` |
+| DELETE| `/api/v1/modules/{id}` | Professor/TA | None |
+| PATCH | `/api/v1/modules/{id}/items-order` | Professor/TA | `{"items":[]}` |
+| GET | `/api/v1/materials/{id}` | Any Auth | None |
+| POST | `/api/v1/modules/{id}/materials` | Professor/TA | `{"title":"Mat", "type":"video_link", "content":"x", "order":1}` |
+| PUT | `/api/v1/materials/{id}` | Professor/TA | `{"title":"Mat Edit", "type":"video_link"}` |
+| DELETE| `/api/v1/materials/{id}` | Professor/TA | None |
+| POST | `/api/v1/materials/{id}/views` | Any Auth | Record material view |
+
+## 7. Forum Q&A
+**Note on Accepting Answers**: Accepting a forum post requires you to be the owner of the thread. It is deliberately **NOT** restricted by the `professor` middleware, so students who ask questions can accept answers.
+
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/courses/{id}/threads` | Any Auth | None |
+| GET | `/api/v1/modules/{id}/threads` | Any Auth | None |
+| GET | `/api/v1/challenges/{id}/threads`| Any Auth | None |
+| POST | `/api/v1/courses/{id}/threads` | Any Auth | `{"title":"Th1", "body":"x"}` |
+| POST | `/api/v1/modules/{id}/threads` | Any Auth | `{"title":"Th1", "body":"x"}` |
+| POST | `/api/v1/challenges/{id}/threads`| Any Auth | `{"title":"Th1", "body":"x"}` |
+| GET | `/api/v1/threads/{id}` | Any Auth | None |
+| PUT | `/api/v1/threads/{id}` | Any Auth | `{"title":"Edit", "body":"x"}` |
+| DELETE| `/api/v1/threads/{id}` | Any Auth | None |
+| POST | `/api/v1/threads/{id}/posts` | Any Auth | `{"body":"Ans"}` |
+| PUT | `/api/v1/posts/{id}` | Any Auth | `{"body":"Ans edit"}` |
+| DELETE| `/api/v1/posts/{id}` | Any Auth | None |
+| PUT | `/api/v1/threads/{id}/votes/me` | Any Auth | `{"value":1}` |
+| PUT | `/api/v1/posts/{id}/votes/me` | Any Auth | `{"value":1}` |
+| PATCH | `/api/v1/posts/{id}/accept` | Any Auth | No payload. (Thread owner only). |
+
+## 8. Moderation & Reports
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| PATCH | `/api/v1/threads/{id}/pin` | Moderator/Admin | None |
+| PATCH | `/api/v1/threads/{id}/lock` | Moderator/Admin | None |
+| POST | `/api/v1/reports` | Any Auth | `{"reportable_type":"App\\Models\\ForumThread", "reportable_id":"uuid", "reason":"spam", "details":"x"}` |
+| GET | `/api/v1/moderator/reports` | Moderator/Admin | None |
+| PATCH | `/api/v1/reports/{id}/resolve` | Moderator/Admin | None |
+| PATCH | `/api/v1/reports/{id}/escalate`| Moderator/Admin | None |
+
+## 9. Challenges & IDE
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/languages` | Any Auth | List Judge0 languages |
+| GET | `/api/v1/modules/{id}/challenges`| Professor/TA | List module challenges |
+| POST | `/api/v1/modules/{id}/challenges`| Professor/TA | `{"title":"Ch", "description":"x", "difficulty":"easy", "points":10, "language_id":71, "language_name":"python"}` |
+| GET | `/api/v1/challenges/{id}` | Any Auth | Challenge ID is UUID |
+| PUT | `/api/v1/challenges/{id}` | Professor/TA | Edit challenge |
+| DELETE| `/api/v1/challenges/{id}` | Professor/TA | None |
+| POST | `/api/v1/challenges/{id}/test-cases` | Professor/TA | `{"input_data":"1", "expected_output":"2", "is_hidden":false}` |
+| PUT | `/api/v1/challenge-test-cases/{id}`| Professor/TA | None |
+| DELETE| `/api/v1/challenge-test-cases/{id}`| Professor/TA | None |
+| POST | `/api/v1/challenges/{id}/attempts` | Any Auth | `{"submitted_code":"print('2')", "language_id":71}` |
+| GET | `/api/v1/challenges/{id}/attempts` | Any Auth | List own attempts (or all if Prof) |
+| POST | `/api/v1/challenge-attempts/{id}/feedback` | Professor/TA | `{"feedback":"good"}` |
+
+## 10. Quizzes & Flashcards
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| POST | `/api/v1/modules/{id}/quizzes` | Professor/TA | `{"title":"Q", "description":"x", "mode":"practice", "time_limit_minutes":10, "passing_score":70}` |
+| GET | `/api/v1/quizzes/{id}` | Any Auth | None |
+| PUT | `/api/v1/quizzes/{id}` | Professor/TA | Edit quiz |
+| DELETE| `/api/v1/quizzes/{id}` | Professor/TA | None |
+| POST | `/api/v1/quizzes/{id}/questions` | Professor/TA | `{"question_text":"x", "type":"multiple_choice", "points":10, "options":["a","b"], "correct_answer":"a"}` |
+| PUT | `/api/v1/quiz-questions/{id}` | Professor/TA | Edit question |
+| DELETE| `/api/v1/quiz-questions/{id}` | Professor/TA | None |
+| PUT | `/api/v1/quiz-questions/{id}/answers`| Professor/TA | Update answers array |
+| POST | `/api/v1/quizzes/{id}/attempts` | Any Auth | `{"answers":[{"quiz_question_id": 1, "answer_text":"a"}]}` |
+| GET | `/api/v1/quiz-attempts/{id}` | Any Auth | View attempt details |
+| POST | `/api/v1/practice-quizzes` | Any Auth | `{"quiz_id": 1, "question_count":5}` (Generates random practice attempt) |
+
+### Flashcards
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/flashcard-decks` | Any Auth | List decks |
+| POST | `/api/v1/flashcard-decks` | Professor/TA | `{"title":"Deck", "description":"x", "module_id": 1}` |
+| GET | `/api/v1/flashcard-decks/{id}` | Any Auth | View deck |
+| PUT | `/api/v1/flashcard-decks/{id}` | Professor/TA | Edit deck |
+| DELETE| `/api/v1/flashcard-decks/{id}` | Professor/TA | None |
+| POST | `/api/v1/flashcard-decks/{id}/flashcards`| Professor/TA | `{"question_text":"q", "answer_text":"a"}` |
+| PUT | `/api/v1/flashcards/{id}` | Professor/TA | `{"question_text":"q2", "answer_text":"a2"}` |
+| DELETE| `/api/v1/flashcards/{id}` | Professor/TA | None |
+| POST | `/api/v1/flashcard-imports` | Professor/TA | `{"deck_id": 1, "quiz_id": 1}` (Imports flashcards from Quiz) |
+| GET | `/api/v1/flashcard-decks/{id}/due-flashcards`| Any Auth | Spaced repetition queue |
+| PATCH | `/api/v1/flashcards/{id}` | Any Auth | `{"quality":4}` (Records review quality 0-5) |
+
+## 11. Notifications
+| Method | Path | Roles | Payload / Notes |
+|---|---|---|---|
+| GET | `/api/v1/notifications` | Any Auth | List user notifications |
+| GET | `/api/v1/notifications/unread-count`| Any Auth | Count unread |
+| PATCH | `/api/v1/notifications/{id}` | Any Auth | Mark specific as read |
+| PATCH | `/api/v1/notifications` | Any Auth | Mark all as read |
