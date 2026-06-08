@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
+use App\Models\CourseUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(['message' => 'List of courses']);
+        $courses = Course::with('owner:id,name,avatar_path')->paginate(15);
+        return response()->json(['data' => $courses]);
     }
 
     public function store(Request $request)
@@ -23,16 +27,31 @@ class CourseController extends Controller
             'has_leaderboard' => 'boolean',
         ]);
 
-        return response()->json(['message' => 'Course created', 'data' => $validated], 201);
+        $course = new Course($validated);
+        $course->owner_id = $request->user()->id;
+        $course->slug = Str::slug($validated['title']) . '-' . uniqid();
+        $course->save();
+
+        CourseUser::create([
+            'course_id' => $course->id,
+            'user_id' => $request->user()->id,
+            'role' => 'professor',
+            'status' => 'enrolled'
+        ]);
+
+        return response()->json(['message' => 'Course created successfully', 'data' => $course], 201);
     }
 
     public function show($id)
     {
-        return response()->json(['message' => 'Course details']);
+        $course = Course::with(['modules.materials', 'owner:id,name'])->findOrFail($id);
+        return response()->json(['data' => $course]);
     }
 
     public function update(Request $request, $id)
     {
+        $course = Course::findOrFail($id);
+        
         $validated = $request->validate([
             'category' => 'sometimes|required|string|max:50',
             'title' => 'sometimes|required|string|max:255',
@@ -42,41 +61,66 @@ class CourseController extends Controller
             'has_leaderboard' => 'boolean',
         ]);
 
-        return response()->json(['message' => 'Course updated', 'data' => $validated]);
+        if (isset($validated['title'])) {
+            $course->slug = Str::slug($validated['title']) . '-' . uniqid();
+        }
+        $course->update($validated);
+
+        return response()->json(['message' => 'Course updated', 'data' => $course]);
     }
 
     public function destroy($id)
     {
+        $course = Course::findOrFail($id);
+        $course->delete();
         return response()->json(['message' => 'Course deleted']);
     }
 
     public function progress($id)
     {
-        return response()->json(['message' => 'Course progress']);
+        $pivot = CourseUser::where('course_id', $id)->where('user_id', request()->user()->id)->first();
+        return response()->json(['data' => ['progress_percent' => $pivot ? $pivot->progress_percent : 0]]);
     }
 
     public function leaderboard($id)
     {
-        return response()->json(['message' => 'Course leaderboard']);
+        $leaderboard = CourseUser::with('user:id,name,avatar_path')
+            ->where('course_id', $id)
+            ->where('role', 'student')
+            ->orderBy('xp', 'desc')
+            ->limit(50)
+            ->get();
+            
+        return response()->json(['data' => $leaderboard]);
     }
 
     public function stats($id)
     {
-        return response()->json(['message' => 'Course statistics']);
+        $totalStudents = CourseUser::where('course_id', $id)->where('role', 'student')->count();
+        return response()->json(['data' => ['total_students' => $totalStudents]]);
     }
 
     public function addStaff(Request $request, $id)
     {
         $validated = $request->validate([
-            'user_id' => 'required|string',
-            'role' => 'required|string',
+            'user_id' => 'required|uuid',
+            'role' => 'required|string|in:professor,ta',
         ]);
 
-        return response()->json(['message' => 'Staff added', 'data' => $validated]);
+        $pivot = CourseUser::firstOrCreate([
+            'course_id' => $id,
+            'user_id' => $validated['user_id'],
+        ], [
+            'role' => $validated['role'],
+            'status' => 'enrolled'
+        ]);
+
+        return response()->json(['message' => 'Staff added', 'data' => $pivot]);
     }
 
     public function removeStaff($id, $userId)
     {
+        CourseUser::where('course_id', $id)->where('user_id', $userId)->delete();
         return response()->json(['message' => 'Staff removed']);
     }
 
