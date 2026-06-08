@@ -81,12 +81,8 @@ class ChallengeController extends Controller
     public function destroy($id)
     {
         $challenge = Challenge::findOrFail($id);
-        try {
-            $challenge->delete();
-            return response()->json(['message' => 'Deleted successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Cannot delete challenge due to dependencies'], 400);
-        }
+        $challenge->delete();
+        return response()->json(['message' => 'Deleted successfully']);
     }
 
     public function languages()
