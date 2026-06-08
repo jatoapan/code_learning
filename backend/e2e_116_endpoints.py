@@ -199,20 +199,20 @@ req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu2_id})
 req("POST", f"/courses/{c_id}/staff-members", prof, {"user_id": stu2_id, "role":"ta"})
 req("DELETE", f"/courses/{c_id}/staff/{stu2_id}", prof)
 
-if p_id: req("PATCH", f"/posts/{p_id}/accept", prof, {})
+if p_id: req("PATCH", f"/posts/{p_id}/accept", stu, {})
 if rep_id: req("PATCH", f"/reports/{rep_id}/escalate", admin, {})
 
-req("GET", f"/modules/2/challenges", stu)
+req("GET", f"/modules/2/challenges", prof)
 if ca_id: req("POST", f"/challenge-attempts/{ca_id}/feedback", prof, {"feedback":"good"})
 
-req("POST", f"/materials/1/endorsements", prof, {})
-req("DELETE", f"/materials/1/endorsements", prof)
+req("POST", f"/materials/1/endorsements", admin, {})
+req("DELETE", f"/materials/1/endorsements", admin, {})
 if th_id:
-    req("POST", f"/threads/{th_id}/endorsements", prof, {})
-    req("DELETE", f"/threads/{th_id}/endorsements", prof)
-if po_id:
-    req("POST", f"/posts/{po_id}/endorsements", prof, {})
-    req("DELETE", f"/posts/{po_id}/endorsements", prof)
+    req("POST", f"/threads/{th_id}/endorsements", admin, {})
+    req("DELETE", f"/threads/{th_id}/endorsements", admin, {})
+if p_id:
+    req("POST", f"/posts/{p_id}/endorsements", admin, {})
+    req("DELETE", f"/posts/{p_id}/endorsements", admin, {})
 
 req("POST", "/flashcard-imports", prof, {"deck_id": 1, "quiz_id": qz_id})
 req("GET", f"/flashcard-decks/1/due-flashcards", stu)
