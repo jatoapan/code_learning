@@ -3,42 +3,60 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Report;
 use Illuminate\Http\Request;
+use App\Enums\ReportReason;
+use App\Enums\ReportStatus;
 
 class ReportController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(['message' => 'List of reports']);
+        $reports = Report::with('reporter:id,name', 'reportable')
+                         ->orderBy('created_at', 'desc')
+                         ->paginate(20);
+                         
+        return response()->json(['data' => $reports]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
+            'reportable_type' => 'required|string',
+            'reportable_id' => 'required|string',
+            'reason' => 'required|string|in:spam,plagiarism,offensive_language,academic_dishonesty,other',
+            'description' => 'nullable|string',
         ]);
 
-        return response()->json(['message' => 'Report created successfully', 'data' => $validated], 201);
+        $report = new Report();
+        $report->reporter_id = $request->user()->id;
+        $report->reportable_type = $validated['reportable_type'];
+        $report->reportable_id = $validated['reportable_id'];
+        $report->reason = $validated['reason'];
+        $report->description = $validated['description'];
+        $report->status = ReportStatus::Pending->value;
+        $report->save();
+
+        return response()->json(['message' => 'Report submitted successfully', 'data' => $report], 201);
     }
 
-    public function show($id)
+    public function resolve(Request $request, $id)
     {
-        return response()->json(['message' => 'Report details', 'id' => $id]);
+        $report = Report::findOrFail($id);
+        $report->status = ReportStatus::Resolved->value;
+        $report->resolver_id = $request->user()->id;
+        $report->resolved_at = now();
+        $report->save();
+
+        return response()->json(['message' => 'Report resolved', 'data' => $report]);
     }
 
-    public function update(Request $request, $id)
+    public function escalate(Request $request, $id)
     {
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-        ]);
+        $report = Report::findOrFail($id);
+        $report->status = ReportStatus::Escalated->value;
+        $report->save();
 
-        return response()->json(['message' => 'Report updated successfully', 'data' => $validated]);
-    }
-
-    public function destroy($id)
-    {
-        return response()->json(['message' => 'Report deleted successfully']);
+        return response()->json(['message' => 'Report escalated', 'data' => $report]);
     }
 }
