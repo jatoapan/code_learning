@@ -7,57 +7,78 @@ use Illuminate\Support\Facades\Log;
 
 class Judge0Service
 {
-    protected string $baseUrl;
+    protected $baseUrl;
+    protected $token;
+    protected $host;
 
     public function __construct()
     {
-        // En producción (Railway) tomará la URL del contenedor de Judge0
-        $this->baseUrl = config('services.judge0.url', 'http://localhost:2358');
+        $this->baseUrl = env('JUDGE0_URL', 'https://judge0-ce.p.rapidapi.com');
+        $this->token = env('JUDGE0_TOKEN', '');
+        $this->host = env('JUDGE0_HOST', 'judge0-ce.p.rapidapi.com');
     }
 
     /**
-     * Envía un intento de código a Judge0 de forma asíncrona.
+     * Envía el código a Judge0 para ser evaluado
+     * 
+     * @param int $languageId El ID del lenguaje (ej. 71 para Python 3)
+     * @param string $sourceCode El código enviado por el estudiante
+     * @param string|null $expectedOutput La salida esperada del caso de prueba
+     * @param string|null $stdin La entrada estándar (opcional)
+     * @return array
      */
-    public function submit(string $sourceCode, int $languageId, ?string $stdin, ?string $expectedOutput, string $callbackUrl = null)
+    public function submitCode(int $languageId, string $sourceCode, ?string $expectedOutput = null, ?string $stdin = null)
     {
         $payload = [
-            'source_code' => $sourceCode,
             'language_id' => $languageId,
-            'stdin' => $stdin,
-            'expected_output' => $expectedOutput,
+            'source_code' => $sourceCode,
         ];
 
-        if ($callbackUrl) {
-            $payload['callback_url'] = $callbackUrl;
+        if ($expectedOutput) {
+            $payload['expected_output'] = $expectedOutput;
+        }
+
+        if ($stdin) {
+            $payload['stdin'] = $stdin;
         }
 
         try {
-            $response = Http::post("{$this->baseUrl}/submissions?base64_encoded=false&wait=false", $payload);
+            $request = Http::withHeaders($this->getHeaders());
+
+            // Si es RapidAPI u otra URL externa (Petición síncrona: wait=true)
+            $response = $request->post($this->baseUrl . '/submissions?base64_encoded=false&wait=true', $payload);
 
             if ($response->successful()) {
-                return $response->json('token');
+                return $response->json();
             }
-            
-            Log::error('Judge0 Submission Error', ['response' => $response->body()]);
-            return null;
+
+            Log::error('Error de Judge0: ' . $response->body());
+            return ['error' => 'No se pudo conectar con el motor de compilación.'];
             
         } catch (\Exception $e) {
-            Log::error('Judge0 Connection Exception', ['message' => $e->getMessage()]);
-            return null;
+            Log::error('Excepción en Judge0Service: ' . $e->getMessage());
+            return ['error' => 'Fallo interno al compilar.'];
         }
     }
 
-    /**
-     * Consulta manualmente el estado de un token (útil como fallback si fallan los webhooks).
-     */
-    public function getSubmission(string $token)
+    private function getHeaders()
     {
-        $response = Http::get("{$this->baseUrl}/submissions/{$token}?base64_encoded=false");
-        
-        if ($response->successful()) {
-            return $response->json();
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ];
+
+        // Si usamos RapidAPI, el header es X-RapidAPI-Key
+        if (str_contains($this->baseUrl, 'rapidapi.com')) {
+            $headers['X-RapidAPI-Key'] = $this->token;
+            $headers['X-RapidAPI-Host'] = $this->host;
+        } else {
+            // Si es auto-hospedado, usamos el estándar de Judge0 X-Auth-Token
+            if (!empty($this->token)) {
+                $headers['X-Auth-Token'] = $this->token;
+            }
         }
-        
-        return null;
+
+        return $headers;
     }
 }
