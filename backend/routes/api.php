@@ -5,8 +5,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::get('/health', function () { return response()->json(['status' => 'ok']); });
     Route::get('/ping-deploy', function () { 
-        $exists = class_exists(\App\Http\Controllers\Api\V1\AuthenticationController::class);
-        return response()->json(['class_found_in_memory' => $exists]); 
+        return response()->json([
+            'auth_exists' => class_exists(\App\Http\Controllers\Api\V1\AuthenticationController::class),
+            'course_exists' => class_exists(\App\Http\Controllers\Api\V1\CourseController::class)
+        ]); 
     });
 
     // 4.1 Auth
