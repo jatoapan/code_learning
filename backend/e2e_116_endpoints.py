@@ -174,7 +174,6 @@ dummy_tok = req("POST", "/sessions", None, {"email":"d@d.com", "password":"passw
 if dummy_tok:
     req("DELETE", "/users/me", dummy_tok)
 
-req("DELETE", "/sessions/current", stu2)
 
 req("GET", "/courses", stu)
 req("GET", "/professor-applications/mine", prof)
@@ -189,17 +188,18 @@ if app_id:
     req("PATCH", f"/professor-applications/{app_id}/assign", admin, {"reviewer_id": 1})
 
 stu_id = req("GET", "/user", stu).get("id", 1)
+stu2_id = req("GET", "/user", stu2).get("id", 1)
 req("GET", "/support/users", admin)
 req("GET", f"/support/users/{stu_id}", admin)
 req("PUT", f"/support/users/{stu_id}/role", admin, {"roles":["student"]})
 req("PATCH", f"/support/users/{stu_id}/deactivate", admin, {})
 req("GET", "/admin/institutions/1/analytics", admin)
 
-req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu_id})
-req("POST", f"/courses/{c_id}/staff-members", prof, {"user_id": stu_id, "role":"ta"})
-req("DELETE", f"/courses/{c_id}/staff/{stu_id}", prof)
+req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu2_id})
+req("POST", f"/courses/{c_id}/staff-members", prof, {"user_id": stu2_id, "role":"ta"})
+req("DELETE", f"/courses/{c_id}/staff/{stu2_id}", prof)
 
-if po_id: req("PATCH", f"/posts/{po_id}/accept", prof, {})
+if p_id: req("PATCH", f"/posts/{p_id}/accept", prof, {})
 if rep_id: req("PATCH", f"/reports/{rep_id}/escalate", admin, {})
 
 req("GET", f"/modules/2/challenges", stu)
@@ -223,6 +223,7 @@ if fc_id:
     req("DELETE", f"/flashcards/{fc_id}", prof)
 
 req("POST", f"/practice-quizzes", stu, {"quiz_id": qz_id, "question_count":5})
+req("DELETE", "/sessions/current", stu2)
 print("\n--- ELIMINACIONES ABSOLUTAS ---")
 if 'ch_id' in locals() and ch_id: req("DELETE", f"/challenges/{ch_id}", prof)
 if 'dk_id' in locals() and dk_id: req("DELETE", f"/flashcard-decks/{dk_id}", prof)

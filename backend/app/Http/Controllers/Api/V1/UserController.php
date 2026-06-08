@@ -24,7 +24,7 @@ class UserController extends Controller
 
     public function deactivate(Request $request)
     {
-        $request->user()->update(['status' => 'inactive']);
+        $request->user()->update(['status' => \App\Enums\UserStatus::Deactivated]);
         $request->user()->tokens()->delete(); // Cierra todas las sesiones activas
         
         return response()->json(['message' => 'Cuenta desactivada permanentemente']);
