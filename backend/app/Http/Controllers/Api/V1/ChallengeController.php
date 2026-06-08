@@ -65,6 +65,30 @@ class ChallengeController extends Controller
         return response()->json(['message' => 'Challenge created successfully', 'data' => $challenge], 201);
     }
 
+    public function update(Request $request, $id)
+    {
+        $challenge = Challenge::findOrFail($id);
+        $validated = $request->validate([
+            'title' => 'string|max:255',
+            'description' => 'string',
+            'difficulty' => 'string|in:easy,medium,hard',
+            'points' => 'integer|min:0',
+        ]);
+        $challenge->update($validated);
+        return response()->json(['message' => 'Updated successfully', 'data' => $challenge]);
+    }
+
+    public function destroy($id)
+    {
+        $challenge = Challenge::findOrFail($id);
+        try {
+            $challenge->delete();
+            return response()->json(['message' => 'Deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Cannot delete challenge due to dependencies'], 400);
+        }
+    }
+
     public function languages()
     {
         // IDs típicos de Judge0 CE: 71 = Python 3, 62 = Java, 54 = C++

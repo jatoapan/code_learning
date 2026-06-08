@@ -35,4 +35,32 @@ class FlashcardDeckController extends Controller
 
         return response()->json(['message' => 'Deck created successfully', 'data' => $deck], 201);
     }
+
+    public function index()
+    {
+        return response()->json(['data' => FlashcardDeck::all()]);
+    }
+
+    public function show($id)
+    {
+        return response()->json(['data' => FlashcardDeck::findOrFail($id)]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $deck = FlashcardDeck::findOrFail($id);
+        $validated = $request->validate([
+            'title' => 'string|max:255',
+            'description' => 'nullable|string',
+        ]);
+        $deck->update($validated);
+        return response()->json(['message' => 'Updated successfully', 'data' => $deck]);
+    }
+
+    public function destroy($id)
+    {
+        $deck = FlashcardDeck::findOrFail($id);
+        $deck->delete();
+        return response()->json(['message' => 'Deleted successfully']);
+    }
 }
