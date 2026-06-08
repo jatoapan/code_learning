@@ -45,24 +45,21 @@ class FlashcardController extends Controller
         return response()->json(['message' => 'Flashcard deleted successfully']);
     }
 
-    public function importFromQuiz(Request $request, $deckId)
+    public function importFromQuiz(Request $request)
     {
         $validated = $request->validate([
+            'deck_id' => 'required|exists:flashcard_decks,id',
             'quiz_id' => 'required|exists:quizzes,id'
         ]);
 
-        $deck = \App\Models\FlashcardDeck::findOrFail($deckId);
+        $deck = \App\Models\FlashcardDeck::findOrFail($validated['deck_id']);
         $questions = \App\Models\QuizQuestion::where('quiz_id', $validated['quiz_id'])->get();
 
         foreach ($questions as $question) {
-            $correctAnswer = \App\Models\QuizAnswer::where('question_id', $question->id)
-                                                   ->where('is_correct', true)
-                                                   ->first();
-                                                   
             Flashcard::create([
                 'deck_id' => $deck->id,
                 'question_text' => $question->question_text,
-                'answer_text' => $correctAnswer ? $correctAnswer->answer_text : 'No answer provided'
+                'answer_text' => $question->correct_answer ?? 'No answer provided'
             ]);
         }
 

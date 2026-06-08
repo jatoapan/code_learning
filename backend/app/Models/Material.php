@@ -42,4 +42,9 @@ class Material extends Model
                     ->withPivot('viewed_at')
                     ->withTimestamps();
     }
+
+    public function endorsements()
+    {
+        return $this->morphMany(Endorsement::class, 'endorseable');
+    }
 }

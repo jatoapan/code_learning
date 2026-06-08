@@ -55,4 +55,9 @@ class ForumThread extends Model
     {
         return $this->morphMany(Report::class, 'reportable');
     }
+
+    public function endorsements()
+    {
+        return $this->morphMany(Endorsement::class, 'endorseable');
+    }
 }

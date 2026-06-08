@@ -120,8 +120,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/modules/{id}/challenges', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'store']);
             Route::put('/challenges/{id}', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'update']);
             Route::delete('/challenges/{id}', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'destroy']);
-            Route::patch('/challenges/{id}/approve', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'approve']);
-            Route::patch('/challenges/{id}/reject', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'reject']);
             
             Route::post('/challenges/{id}/test-cases', [\App\Http\Controllers\Api\V1\ChallengeTestCaseController::class, 'store']);
             Route::put('/challenge-test-cases/{id}', [\App\Http\Controllers\Api\V1\ChallengeTestCaseController::class, 'update']);

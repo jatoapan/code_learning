@@ -195,7 +195,7 @@ req("PUT", f"/support/users/{stu_id}/role", admin, {"roles":["student"]})
 req("PATCH", f"/support/users/{stu_id}/deactivate", admin, {})
 req("GET", "/admin/institutions/1/analytics", admin)
 
-req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu2_id})
+req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu2_id, "role": "student"})
 req("POST", f"/courses/{c_id}/staff-members", prof, {"user_id": stu2_id, "role":"ta"})
 req("DELETE", f"/courses/{c_id}/staff/{stu2_id}", prof)
 
@@ -235,7 +235,7 @@ if 'm_id' in locals() and m_id: req("DELETE", f"/modules/{m_id}", prof)
 if 'c_id' in locals() and c_id: 
     req("DELETE", f"/courses/{c_id}/enrollments/me", stu)
     req("DELETE", f"/courses/{c_id}", prof)
-if 'rt_id' in locals() and rt_id: req("DELETE", f"/admin/response-templates/{rt_id}", admin)
+
 if 'inst_id' in locals() and inst_id: req("DELETE", f"/admin/institutions/{inst_id}", admin)
 
 print("\n=================================================")
