@@ -12,6 +12,18 @@
 - **Primary Keys**: Many primary keys (like `Users`, `Courses`, `Challenges`, `Threads`, `Posts`) use **UUIDs** (version 4). Always expect strings for these IDs instead of integers.
 - **Judge0 Integration**: Gamification and challenge endpoints automatically wrap around the Judge0 API behind the scenes. You simply submit the code and language ID to our endpoints, and we handle the sandboxed execution.
 
+## Standardized Error Handling
+The API natively uses Laravel's standardized JSON responses. Frontend developers should use an Axios/Fetch interceptor to handle these standard HTTP status codes:
+- **`422 Unprocessable Entity` (Validation Errors)**: Returned when form data is invalid. The payload includes an `errors` object mapping fields to arrays of error messages.
+  ```json
+  { "message": "The given data was invalid.", "errors": { "email": ["Invalid format."] } }
+  ```
+- **`404 Not Found`**: Returned when querying a UUID or ID that doesn't exist.
+- **`401 Unauthenticated`**: Missing, expired, or invalid Bearer token.
+- **`403 Forbidden`**: Valid token, but the user lacks the correct Role (e.g., Student trying to access Professor routes) or doesn't own the resource.
+- **`429 Too Many Requests`**: Rate limiting exceeded (e.g., spamming Judge0 or Login).
+- **`500 Internal Server Error`**: Unexpected backend failure.
+
 ---
 
 ## 1. Global & Dev
