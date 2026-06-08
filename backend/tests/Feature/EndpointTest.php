@@ -25,6 +25,9 @@ class EndpointTest extends TestCase
             $admin = User::factory()->create(['status' => 'active', 'xp' => 100]);
         }
 
+        // Falsificar llamadas HTTP externas (ej. Judge0) para que el test no se cuelgue esperando respuesta
+        \Illuminate\Support\Facades\Http::fake();
+
         $routes = Route::getRoutes();
         $failedRoutes = [];
 
