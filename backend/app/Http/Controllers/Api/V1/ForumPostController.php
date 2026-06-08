@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\ForumPost;
+use App\Models\ForumThread;
 use Illuminate\Http\Request;
 
 class ForumPostController extends Controller
@@ -11,43 +13,61 @@ class ForumPostController extends Controller
     {
         $validated = $request->validate([
             'body' => 'required|string',
-            'parent_id' => 'nullable|uuid',
         ]);
 
-        return response()->json([
-            'message' => 'Post created successfully',
-            'data' => $validated
-        ], 201);
+        $thread = ForumThread::findOrFail($threadId);
+
+        $post = new ForumPost();
+        $post->body = $validated['body'];
+        $post->user_id = $request->user()->id;
+        $post->thread_id = $thread->id;
+        $post->save();
+
+        return response()->json(['message' => 'Post created successfully', 'data' => $post], 201);
     }
 
     public function update(Request $request, $id)
     {
+        $post = ForumPost::findOrFail($id);
+        
+        if ($post->user_id !== $request->user()->id && !$request->user()->hasRole('admin|moderator')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'body' => 'required|string',
         ]);
 
-        return response()->json([
-            'message' => 'Post updated successfully',
-            'data' => $validated
-        ], 200);
+        $post->update($validated);
+
+        return response()->json(['message' => 'Post updated', 'data' => $post]);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        return response()->json([
-            'message' => 'Post deleted successfully'
-        ], 200);
+        $post = ForumPost::findOrFail($id);
+        if ($post->user_id !== $request->user()->id && !$request->user()->hasRole('admin|moderator')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        $post->delete();
+        return response()->json(['message' => 'Post deleted']);
     }
 
-    public function markAcceptedAnswer(Request $request, $id)
+    public function acceptAnswer(Request $request, $id)
     {
-        $validated = $request->validate([
-            'is_accepted_answer' => 'required|boolean',
-        ]);
+        $post = ForumPost::findOrFail($id);
+        $thread = $post->thread;
+        
+        if ($thread->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
 
-        return response()->json([
-            'message' => 'Post accepted answer status updated',
-            'data' => $validated
-        ], 200);
+        $post->is_accepted_answer = true;
+        $post->save();
+
+        $thread->status = \App\Enums\ThreadStatus::Resolved->value;
+        $thread->save();
+
+        return response()->json(['message' => 'Answer accepted', 'data' => $post]);
     }
 }
