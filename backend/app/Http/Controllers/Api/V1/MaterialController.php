@@ -20,7 +20,8 @@ class MaterialController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'required|string|in:pdf,video_link,ppt,pptx',
-            'content' => 'required|string',
+            'content' => 'nullable|string', // URL o texto
+            'file' => 'nullable|file|mimes:pdf,ppt,pptx,mp4,avi,mkv|max:51200', // Hasta 50MB
             'estimated_minutes' => 'nullable|integer',
             'is_required' => 'nullable|boolean',
         ]);
@@ -30,7 +31,15 @@ class MaterialController extends Controller
         $material = new Material();
         $material->title = $validated['title'];
         $material->type = $validated['type'];
-        $material->file_path = $validated['content']; // Usamos content como file_path para links
+        
+        // Logica Hibrida: Si envian el archivo pesado, lo guardamos. Si envian un link, usamos el link.
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('materials', 'public');
+            $material->file_path = '/storage/' . $path;
+        } else {
+            $material->file_path = $validated['content'] ?? '';
+        }
+        
         $material->creator_id = $request->user()->id;
         $material->save();
 
