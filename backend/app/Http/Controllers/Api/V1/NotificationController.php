@@ -7,38 +7,32 @@ use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(['message' => 'List of notifications']);
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'message' => 'required|string',
-            'user_id' => 'required|integer',
+        return response()->json([
+            'data' => $request->user()->notifications()->paginate(20)
         ]);
-
-        return response()->json(['message' => 'Notification created successfully', 'data' => $validated], 201);
     }
 
-    public function show($id)
+    public function markAsRead(Request $request, $id)
     {
-        return response()->json(['message' => 'Notification details', 'id' => $id]);
+        $notification = $request->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+
+        return response()->json(['message' => 'Notification marked as read']);
     }
 
-    public function update(Request $request, $id)
+    public function markAllAsRead(Request $request)
     {
-        $validated = $request->validate([
-            'read_at' => 'nullable|date',
+        $request->user()->unreadNotifications->markAsRead();
+
+        return response()->json(['message' => 'All notifications marked as read']);
+    }
+
+    public function unreadCount(Request $request)
+    {
+        return response()->json([
+            'count' => $request->user()->unreadNotifications->count()
         ]);
-
-        return response()->json(['message' => 'Notification updated successfully', 'data' => $validated]);
-    }
-
-    public function destroy($id)
-    {
-        return response()->json(['message' => 'Notification deleted successfully']);
     }
 }
