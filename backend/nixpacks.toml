@@ -16,4 +16,4 @@
     nixPkgs = ["...", "php83Extensions.redis", "php83Extensions.pdo_mysql"]
 
 [phases.build]
-    cmds = ["composer install --no-dev --optimize-autoloader", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache"]
+    cmds = ["composer install --no-dev --optimize-autoloader", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache", "php artisan storage:link"]
