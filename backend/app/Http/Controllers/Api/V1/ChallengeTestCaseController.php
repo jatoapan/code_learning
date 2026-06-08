@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Challenge;
+use App\Models\ChallengeTestCase;
 use Illuminate\Http\Request;
 
 class ChallengeTestCaseController extends Controller
@@ -12,32 +14,44 @@ class ChallengeTestCaseController extends Controller
         $validated = $request->validate([
             'input' => 'nullable|string',
             'expected_output' => 'required|string',
-            'is_hidden' => 'boolean'
+            'is_hidden' => 'boolean',
         ]);
 
-        return response()->json([
-            'message' => 'Challenge test case created successfully',
-            'challenge_id' => $challengeId,
-            'data' => $validated
-        ], 201);
+        $challenge = Challenge::findOrFail($challengeId);
+
+        $testCase = new ChallengeTestCase();
+        $testCase->challenge_id = $challenge->id;
+        $testCase->input = $validated['input'] ?? null;
+        $testCase->expected_output = $validated['expected_output'];
+        $testCase->is_hidden = $validated['is_hidden'] ?? false;
+        $testCase->save();
+
+        return response()->json(['message' => 'Test case added successfully', 'data' => $testCase], 201);
     }
 
     public function update(Request $request, $id)
     {
+        $testCase = ChallengeTestCase::findOrFail($id);
+
         $validated = $request->validate([
             'input' => 'nullable|string',
-            'expected_output' => 'sometimes|required|string',
-            'is_hidden' => 'boolean'
+            'expected_output' => 'required|string',
+            'is_hidden' => 'boolean',
         ]);
 
-        return response()->json([
-            'message' => 'Challenge test case updated successfully',
-            'data' => $validated
-        ]);
+        $testCase->input = $validated['input'] ?? $testCase->input;
+        $testCase->expected_output = $validated['expected_output'] ?? $testCase->expected_output;
+        $testCase->is_hidden = $validated['is_hidden'] ?? $testCase->is_hidden;
+        $testCase->save();
+
+        return response()->json(['message' => 'Test case updated successfully', 'data' => $testCase]);
     }
 
     public function destroy($id)
     {
-        return response()->json(['message' => 'Challenge test case deleted successfully'], 204);
+        $testCase = ChallengeTestCase::findOrFail($id);
+        $testCase->delete();
+
+        return response()->json(['message' => 'Test case deleted successfully']);
     }
 }
