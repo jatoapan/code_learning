@@ -43,8 +43,4 @@ class Material extends Model
                     ->withTimestamps();
     }
 
-    public function endorsements()
-    {
-        return $this->morphMany(Endorsement::class, 'endorseable');
-    }
 }

@@ -113,6 +113,7 @@ if c_id and m_id:
         if p_id:
             req("PUT", f"/posts/{p_id}", prof, {"body":"Ans edit"})
             req("PUT", f"/posts/{p_id}/votes/me", stu, {"value":1})
+            req("PATCH", f"/posts/{p_id}/accept", stu, {})
 
 print("\n--- MODERATION ---")
 if th_id:
@@ -199,20 +200,11 @@ req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu2_id, "r
 req("POST", f"/courses/{c_id}/staff-members", prof, {"user_id": stu2_id, "role":"ta"})
 req("DELETE", f"/courses/{c_id}/staff/{stu2_id}", prof)
 
-if p_id: req("PATCH", f"/posts/{p_id}/accept", stu, {})
 if rep_id: req("PATCH", f"/reports/{rep_id}/escalate", admin, {})
 
 req("GET", f"/modules/2/challenges", prof)
 if ca_id: req("POST", f"/challenge-attempts/{ca_id}/feedback", prof, {"feedback":"good"})
 
-req("POST", f"/materials/1/endorsements", admin, {})
-req("DELETE", f"/materials/1/endorsements", admin, {})
-if th_id:
-    req("POST", f"/threads/{th_id}/endorsements", admin, {})
-    req("DELETE", f"/threads/{th_id}/endorsements", admin, {})
-if p_id:
-    req("POST", f"/posts/{p_id}/endorsements", admin, {})
-    req("DELETE", f"/posts/{p_id}/endorsements", admin, {})
 
 req("POST", "/flashcard-imports", prof, {"deck_id": 1, "quiz_id": qz_id})
 req("GET", f"/flashcard-decks/1/due-flashcards", stu)

@@ -138,12 +138,6 @@ Route::prefix('v1')->group(function () {
         Route::middleware('role:moderator|admin')->group(function () {
             Route::patch('/threads/{id}/pin', [\App\Http\Controllers\Api\V1\ForumThreadController::class, 'togglePin']);
             Route::patch('/threads/{id}/lock', [\App\Http\Controllers\Api\V1\ForumThreadController::class, 'lock']);
-            Route::post('/materials/{id}/endorsements', [\App\Http\Controllers\Api\V1\EndorsementController::class, 'endorseMaterial']);
-            Route::delete('/materials/{id}/endorsements', [\App\Http\Controllers\Api\V1\EndorsementController::class, 'revokeMaterial']);
-            Route::post('/threads/{id}/endorsements', [\App\Http\Controllers\Api\V1\EndorsementController::class, 'endorseThread']);
-            Route::delete('/threads/{id}/endorsements', [\App\Http\Controllers\Api\V1\EndorsementController::class, 'revokeThread']);
-            Route::post('/posts/{id}/endorsements', [\App\Http\Controllers\Api\V1\EndorsementController::class, 'endorsePost']);
-            Route::delete('/posts/{id}/endorsements', [\App\Http\Controllers\Api\V1\EndorsementController::class, 'revokePost']);
             Route::get('/moderator/reports', [\App\Http\Controllers\Api\V1\ReportController::class, 'index']);
             Route::get('/moderator/response-templates', [\App\Http\Controllers\Api\V1\ResponseTemplateController::class, 'index']);
             Route::patch('/reports/{id}/resolve', [\App\Http\Controllers\Api\V1\ReportController::class, 'resolve']);
