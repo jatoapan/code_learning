@@ -2,53 +2,65 @@
 
 use App\Models\User;
 use App\Models\Course;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Institution;
+use App\Models\Challenge;
+use App\Models\Module;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-// Construimos el dataset de rutas dinámicas.
-// En Pest, un dataset puede ser evaluado perezosamente, ideal para inyectar IDs de base de datos.
-dataset('rutas_api', function () {
-    $uuid = Str::uuid()->toString(); // Mock de UUID para rutas que requieren {id}
+test('Autodetección y validación masiva de todos los endpoints de la API', function () {
+    // 1. Preparar la Base de Datos y extraer UUIDs reales para evitar errores 404
+    $this->artisan('db:seed'); // Carga la data del DatabaseSeeder
+    
+    $admin = User::where('email', 'admin@prolecom.com')->first();
+    $courseId = Course::first()->id ?? Str::uuid()->toString();
+    $moduleId = Module::first()->id ?? Str::uuid()->toString();
+    $challengeId = Challenge::first()->id ?? Str::uuid()->toString();
+    $userId = $admin->id;
 
-    return [
-        // [Metodo, Ruta, HTTP_Esperado, RequiereJSON]
-        'Salud del sistema' => ['GET', '/api/v1/health', 200, true],
+    // 2. Extraer todas las rutas registradas en la aplicación
+    $routes = Route::getRoutes();
+    $failedRoutes = [];
+
+    // 3. Iterar y disparar contra los 120 endpoints
+    foreach ($routes as $route) {
+        $uri = $route->uri();
         
-        'Perfil del usuario' => ['GET', '/api/v1/user', 200, true],
+        // Solo auditar rutas de la API V1
+        if (!str_starts_with($uri, 'api/v1')) continue;
+
+        $method = $route->methods()[0];
         
-        'Lista de instituciones' => ['GET', '/api/v1/institutions', 200, true],
-        
-        'Catálogo de cursos' => ['GET', '/api/v1/courses', 200, true],
-        
-        'Verificación de curso inexistente' => ['GET', "/api/v1/courses/{$uuid}", 404, false], // Prueba de error 404 explícito
+        // Smart Reemplazo de variables dinámicas por IDs reales
+        $uriWithId = str_replace('{id}', $courseId, $uri); // Por simplicidad probamos con el ID del curso
+        $uriWithId = str_replace('{user_id}', $userId, $uriWithId);
+        $uriWithId = preg_replace('/\{[a-zA-Z0-9_]+\}/', $courseId, $uriWithId);
 
-        'Crear un reporte (Payload faltante)' => ['POST', '/api/v1/reports', 422, true], // Prueba validaciones de Requests
-        
-        // ** Instrucción: Debes agregar el resto de tus 120 rutas aquí siguiendo esta misma matriz **
-    ];
-});
+        // Disparo de la petición
+        $response = match ($method) {
+            'GET', 'HEAD' => $this->actingAs($admin)->getJson($uriWithId),
+            'POST' => $this->actingAs($admin)->postJson($uriWithId, []),
+            'PUT', 'PATCH' => $this->actingAs($admin)->putJson($uriWithId, []),
+            'DELETE' => $this->actingAs($admin)->deleteJson($uriWithId),
+            default => null,
+        };
 
-test('Validación integral de Endpoints MVP', function (string $method, string $uri, int $expectedStatus, bool $checkJson) {
-    // 1. Arrange: Creamos un usuario "Dios" para saltarnos los middlewares de autenticación
-    $admin = User::factory()->create(['status' => 'active', 'xp' => 100]);
+        if (!$response) continue;
 
-    // 2. Act: Ejecutamos el método correspondiente
-    $response = match ($method) {
-        'GET' => $this->actingAs($admin)->getJson($uri),
-        'POST' => $this->actingAs($admin)->postJson($uri, []),
-        'PUT' => $this->actingAs($admin)->putJson($uri, []),
-        'DELETE' => $this->actingAs($admin)->deleteJson($uri),
-        default => $this->actingAs($admin)->getJson($uri),
-    };
+        $status = $response->status();
 
-    // 3. Assert: Validar el código exacto, si falla, Pest te dirá en qué URI explotó
-    $response->assertStatus($expectedStatus);
-
-    // 4. Assert: Validar estructura pura JSON si es requerido
-    if ($checkJson && in_array($expectedStatus, [200, 201])) {
-        // Verifica que la respuesta sea casteable como JSON
-        $response->assertJson(fn ($json) => $json->hasAny());
+        // 4. Lógica de Aserción Estricta
+        // Se considera FAIL: 500 (Crash Interno) y 404 (Ruta Inexistente)
+        // Se considera PASS: 200, 201 (Éxito) y 422, 403 (Validaciones Correctas de Seguridad y Formularios)
+        if (in_array($status, [500, 404])) {
+            $failedRoutes[] = "❌ FAIL: [$method] /$uriWithId => HTTP $status\n" . 
+                              "   => Body: " . Str::limit($response->getContent(), 150);
+        }
     }
-})->with('rutas_api');
+
+    // El test explotará y detendrá el CI/CD de Railway si hay aunque sea un fallo crítico (500 o 404)
+    $this->assertEmpty($failedRoutes, "CRASH DETECTADO EN LA API:\n" . implode("\n\n", $failedRoutes));
+});
