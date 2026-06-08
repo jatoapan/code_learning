@@ -38,7 +38,7 @@ class ProfessorApplicationController extends Controller
         return response()->json(['message' => 'Application submitted successfully', 'data' => $app], 201);
     }
 
-    public function assign(Request $request, $id)
+    public function assignReviewer(Request $request, $id)
     {
         $app = ProfessorApplication::findOrFail($id);
         $app->reviewer_id = $request->user()->id;

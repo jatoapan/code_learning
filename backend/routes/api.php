@@ -138,7 +138,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Moderator Routes
-        Route::middleware('role:moderator')->group(function () {
+        Route::middleware('role:moderator|admin')->group(function () {
             Route::patch('/threads/{id}/pin', [\App\Http\Controllers\Api\V1\ForumThreadController::class, 'togglePin']);
             Route::patch('/threads/{id}/lock', [\App\Http\Controllers\Api\V1\ForumThreadController::class, 'lock']);
             Route::post('/materials/{id}/endorsements', [\App\Http\Controllers\Api\V1\EndorsementController::class, 'endorseMaterial']);
