@@ -19,9 +19,9 @@ if [ -z "$TOKEN" ]; then
 fi
 echo "✅ Token de Profesor capturado."
 
-echo -e "\n[2] Creando Curso y Modulo base..."
-COURSE_ID=$(curl -s -X POST "${BASE_URL}/courses" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"title":"Curso de Pruebas Quiz", "description":"test", "difficulty":"beginner"}' | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
-MODULE_ID=$(curl -s -X POST "${BASE_URL}/courses/$COURSE_ID/modules" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"title":"Modulo 1", "order":1}' | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
+echo -e "\n[2] Obteniendo Curso y creando Modulo base..."
+COURSE_ID=$(curl -s -X GET "${BASE_URL}/courses" -H "Authorization: Bearer $TOKEN" | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
+MODULE_ID=$(curl -s -X POST "${BASE_URL}/courses/$COURSE_ID/modules" -H "Accept: application/json" -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"title":"Modulo 2 Quizzes", "order":2}' | grep -oP '"id":\s*"?\K[^",}]+' | head -1 | tr -d '"')
 echo "✅ Curso: $COURSE_ID | Modulo: $MODULE_ID"
 
 echo -e "\n[3] Creando un Quiz (POST /modules/{id}/quizzes)..."
@@ -45,12 +45,12 @@ QUESTION_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/qu
      -d '{"question_text":"¿Que es Laravel?","type":"multiple_choice","points":10,"options":["Un Framework","Un Lenguaje"],"correct_answer":"Un Framework"}')
 echo "   -> HTTP $QUESTION_STATUS"
 
-echo -e "\n[5] Creando un Mazo de Flashcards (POST /modules/{id}/flashcard-decks)..."
-DECK_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/modules/$MODULE_ID/flashcard-decks" \
+echo -e "\n[5] Creando un Mazo de Flashcards (POST /flashcard-decks)..."
+DECK_RESP=$(curl -s -w "\n%{http_code}" -X POST "${BASE_URL}/flashcard-decks" \
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer $TOKEN" \
-     -d '{"title":"Conceptos Basicos"}')
+     -d '{"title":"Conceptos Basicos", "module_id":"'"$MODULE_ID"'"}')
 
 DECK_BODY=$(echo "$DECK_RESP" | head -n -1)
 DECK_STATUS=$(echo "$DECK_RESP" | tail -n 1)

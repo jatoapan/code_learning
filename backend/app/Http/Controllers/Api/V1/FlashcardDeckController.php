@@ -10,14 +10,15 @@ use Illuminate\Http\Request;
 
 class FlashcardDeckController extends Controller
 {
-    public function store(Request $request, $moduleId)
+    public function store(Request $request)
     {
         $validated = $request->validate([
+            'module_id' => 'required|exists:modules,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
-        $module = Module::findOrFail($moduleId);
+        $module = Module::findOrFail($validated['module_id']);
 
         $deck = new FlashcardDeck();
         $deck->title = $validated['title'];

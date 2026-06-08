@@ -27,10 +27,16 @@ class QuizQuestionController extends Controller
         $question->question_text = $validated['question_text'];
         $question->type = $validated['type'];
         $question->points = $validated['points'];
-        $question->options = $validated['options'];
-        $question->correct_answer = $validated['correct_answer'];
         $question->explanation = $validated['explanation'] ?? null;
         $question->save();
+
+        foreach ($validated['options'] as $option) {
+            \App\Models\QuizAnswer::create([
+                'question_id' => $question->id,
+                'answer_text' => $option,
+                'is_correct' => ($option === $validated['correct_answer'])
+            ]);
+        }
 
         return response()->json(['message' => 'Question added successfully', 'data' => $question], 201);
     }
