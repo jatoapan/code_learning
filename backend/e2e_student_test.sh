@@ -36,7 +36,7 @@ REPORT_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${BASE_URL}/repo
      -H "Accept: application/json" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer $TOKEN" \
-     -d '{"reportable_type":"App\\Models\\Course","reportable_id":"'"$COURSE_ID"'","reason":"spam","description":"Curso engañoso"}')
+     -d '{"reportable_type":"App\\Models\\Course","reportable_id":"'"$COURSE_ID"'","reason":"spam","details":"Curso engañoso"}')
 echo "   -> HTTP $REPORT_STATUS"
 
 echo -e "\n[5] Abandonando el Curso (DELETE /courses/{id}/enrollments/me)..."

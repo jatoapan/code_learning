@@ -25,7 +25,7 @@ class ReportController extends Controller
             'reportable_type' => 'required|string',
             'reportable_id' => 'required|string',
             'reason' => 'required|string|in:spam,plagiarism,offensive_language,academic_dishonesty,other',
-            'description' => 'nullable|string',
+            'details' => 'nullable|string',
         ]);
 
         $report = new Report();
@@ -33,7 +33,7 @@ class ReportController extends Controller
         $report->reportable_type = $validated['reportable_type'];
         $report->reportable_id = $validated['reportable_id'];
         $report->reason = $validated['reason'];
-        $report->description = $validated['description'];
+        $report->details = $validated['details'] ?? null;
         $report->status = ReportStatus::Pending->value;
         $report->save();
 
