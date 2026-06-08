@@ -17,11 +17,11 @@ class VoteController extends Controller
         $vote = $model->votes()->where('user_id', $userId)->first();
 
         if ($vote) {
-            if ($vote->value == $value) {
+            if ($vote->vote_type == $value) {
                 $vote->delete(); // Undo vote
                 return response()->json(['message' => 'Vote removed']);
             } else {
-                $vote->value = $value;
+                $vote->vote_type = $value;
                 $vote->save(); // Change vote
                 return response()->json(['message' => 'Vote updated']);
             }
@@ -29,7 +29,7 @@ class VoteController extends Controller
 
         $model->votes()->create([
             'user_id' => $userId,
-            'value' => $value
+            'vote_type' => $value
         ]);
 
         return response()->json(['message' => 'Vote recorded'], 201);
