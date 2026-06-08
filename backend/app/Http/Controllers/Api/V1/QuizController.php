@@ -86,7 +86,7 @@ class QuizController extends Controller
             'quiz_id' => $quiz->id,
             'user_id' => $request->user()->id,
             'score' => 0,
-            'status' => 'completed',
+            'passed' => false,
             'started_at' => now(),
             'completed_at' => now(),
         ]);
