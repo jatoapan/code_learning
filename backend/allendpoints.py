@@ -235,6 +235,7 @@ req("DELETE", f"/courses/{c_id}/staff/{stu2_id}", prof)
 
 if rep_id: req("PATCH", f"/reports/{rep_id}/escalate", admin, {})
 
+ca_id = None
 req("GET", f"/modules/2/challenges", prof)
 if ca_id: req("POST", f"/challenge-attempts/{ca_id}/feedback", prof, {"feedback":"good"})
 

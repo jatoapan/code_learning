@@ -9,7 +9,7 @@ class StoreQuizQuestionRequest extends FormRequest
 {
     public function authorize()
     {
-        $quiz = Quiz::findOrFail($this->route('quizId'));
+        $quiz = Quiz::findOrFail($this->route('id'));
         $moduleItem = $quiz->moduleItems()->with('module.course')->first();
         if ($moduleItem) {
             return $this->user()->can('update', $moduleItem->module->course);
