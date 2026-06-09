@@ -23,7 +23,9 @@ class ChallengeController extends Controller
 
     public function indexByModule($moduleId)
     {
-        $module = Module::findOrFail($moduleId);
+        $module = Module::with('course')->findOrFail($moduleId);
+        Gate::authorize('view', $module->course);
+
         $challenges = ModuleItem::where('module_id', $module->id)
                                 ->where('itemable_type', Challenge::class)
                                 ->with('itemable')
@@ -36,6 +38,7 @@ class ChallengeController extends Controller
     public function show(Request $request, $id)
     {
         $challenge = Challenge::with('testCases', 'module.course')->findOrFail($id);
+        Gate::authorize('view', $challenge->module->course);
         
         if (!\Illuminate\Support\Facades\Gate::allows('update', $challenge->module->course)) {
             $challenge->setRelation('testCases', $challenge->testCases->where('is_hidden', false)->values());
