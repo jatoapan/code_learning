@@ -22,3 +22,9 @@ COPY . /var/www
 # 4. Instalar dependencias e inyectar permisos
 RUN composer install --optimize-autoloader --no-dev \
     && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+# 5. Configurar puertos en tiempo de ejecución (RUNTIME) y arrancar Apache
+# Reemplazamos los puertos configurados (8080) por la variable de entorno $PORT que inyecta Railway dinámicamente al arrancar
+CMD sed -i "s/Listen 8080/Listen ${PORT:-80}/g" /etc/apache2/ports.conf \
+    && sed -i "s/<VirtualHost \*:8080>/<VirtualHost \*:${PORT:-80}>/g" /etc/apache2/sites-available/000-default.conf \
+    && apache2-foreground
