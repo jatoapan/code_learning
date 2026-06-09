@@ -3,46 +3,26 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AuthenticationController extends Controller
 {
-    public function register(Request $request)
+    public function __construct(private AuthService $authService)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8'
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'status' => 'active',
-            'xp' => 0
-        ]);
-
-        $token = auth('api')->login($user);
-
-        return response()->json([
-            'token' => $token,
-            'user' => $user
-        ], 201);
     }
 
-    public function login(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        $result = $this->authService->registerUser($request->validated());
+        return response()->json($result, 201);
+    }
 
-        $credentials = $request->only('email', 'password');
-
-        if (! $token = auth('api')->attempt($credentials)) {
+    public function login(LoginRequest $request)
+    {
+        if (! $token = $this->authService->loginUser($request->validated())) {
             return response()->json(['message' => 'Credenciales incorrectas.'], 401);
         }
 
@@ -54,15 +34,17 @@ class AuthenticationController extends Controller
 
     public function logout(Request $request)
     {
-        auth('api')->logout();
+        $this->authService->logoutUser();
         return response()->json(['message' => 'Sesión cerrada exitosamente']);
     }
 
-    public function sendResetLink(Request $request) { 
+    public function sendResetLink(Request $request)
+    { 
         return response()->json(['message' => 'Enlace de recuperación enviado']); 
     }
     
-    public function resetPassword(Request $request) { 
+    public function resetPassword(Request $request)
+    { 
         return response()->json(['message' => 'Contraseña actualizada']); 
     }
 }
