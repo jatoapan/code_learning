@@ -9,10 +9,6 @@ use App\Enums\ReportStatus;
 
 class ReportController extends Controller
 {
-    public function __construct() {
-        $this->middleware('role:admin|moderator')->except(['store']);
-    }
-
     public function index(Request $request) {
         return response()->json(['data' => Report::with('reporter:id,name', 'reportable')->orderBy('created_at', 'desc')->paginate(20)]);
     }

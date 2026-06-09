@@ -8,10 +8,6 @@ use App\Enums\ProfessorApplicationStatus;
 
 class ProfessorApplicationController extends Controller
 {
-    public function __construct() {
-        $this->middleware('role:admin|moderator')->except(['store', 'mine']);
-    }
-
     public function index() {
         return response()->json(['data' => ProfessorApplication::with('applicant:id,name', 'reviewer:id,name')->paginate(15)]);
     }

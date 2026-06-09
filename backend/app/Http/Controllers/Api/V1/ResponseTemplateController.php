@@ -7,10 +7,6 @@ use Illuminate\Http\Request;
 
 class ResponseTemplateController extends Controller
 {
-    public function __construct() {
-        $this->middleware('role:admin|moderator');
-    }
-
     public function index() { return response()->json(['data' => ResponseTemplate::paginate(20)]); }
     public function store(Request $request) {
         $validated = $request->validate(['title' => 'required|string|max:255', 'body' => 'required|string']);

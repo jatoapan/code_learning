@@ -8,10 +8,6 @@ use App\Enums\UserStatus;
 
 class SupportUserController extends Controller
 {
-    public function __construct() {
-        $this->middleware('role:admin')->except(['store']);
-    }
-
     public function index() {
         return response()->json(['data' => User::paginate(20)]);
     }

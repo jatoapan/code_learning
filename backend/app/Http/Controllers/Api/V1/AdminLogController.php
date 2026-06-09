@@ -6,10 +6,6 @@ use Illuminate\Http\Request;
 
 class AdminLogController extends Controller
 {
-    public function __construct() {
-        $this->middleware('role:admin');
-    }
-
     public function index() { return response()->json(['message' => 'List of admin logs']); }
     public function store(Request $request) {
         $validated = $request->validate(['action' => 'required|string|max:255', 'details' => 'nullable|string']);

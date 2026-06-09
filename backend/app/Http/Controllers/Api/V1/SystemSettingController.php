@@ -6,10 +6,6 @@ use Illuminate\Http\Request;
 
 class SystemSettingController extends Controller
 {
-    public function __construct() {
-        $this->middleware('role:admin');
-    }
-
     public function index() { return response()->json(['message' => 'List of system settings']); }
     public function store(Request $request) {
         $validated = $request->validate(['key' => 'required|string|max:255|unique:system_settings', 'value' => 'required|string']);

@@ -19,10 +19,15 @@ def req(method, path, token="", data=None):
         with urllib.request.urlopen(request) as response:
             res_body = response.read().decode('utf-8')
             res_json = json.loads(res_body) if res_body else {}
-            print(f"✅ {method} {path} -> HTTP {response.status}")
+            print(f"✅ {method} {path} -> HTTP {response.status} | JSON: {str(res_json)[:100]}")
             return res_json
     except urllib.error.HTTPError as e:
-        print(f"❌ {method} {path} -> HTTP {e.code}")
+        body = e.read().decode('utf-8')
+        try:
+            res_json = json.loads(body)
+        except:
+            res_json = body
+        print(f"❌ {method} {path} -> HTTP {e.code} | JSON: {str(res_json)[:200]}")
         return {}
 
 print("=================================================")
