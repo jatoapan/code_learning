@@ -16,7 +16,7 @@ class CourseEnrollmentController extends Controller
     public function enroll(Request $request, $id) {
         $course = Course::findOrFail($id);
         
-        if ($course->status !== 'public' && !Gate::allows('update', $course)) {
+        if ($course->status->value !== 'public' && !Gate::allows('update', $course)) {
             abort(403, 'No puedes matricularte en un curso privado o en borrador.');
         }
         
