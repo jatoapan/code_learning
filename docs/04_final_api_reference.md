@@ -27,14 +27,16 @@ The API natively uses Laravel's standardized JSON responses. Frontend developers
 ## Constrained Values (Enums)
 When sending JSON payloads, ensure you use the exact string values expected by the database enumerations. Sending unmapped values will result in a `422 Unprocessable Entity` error.
 - **Roles** (for enrollment/support): `student`, `ta`, `professor`, `moderator`, `support`, `admin`.
-- **Course Status**: `draft`, `public`, `archived`.
-- **Material Type**: `pdf`, `video_link`, `external_link`.
+- **Course Status**: `draft`, `public`, `unlisted`.
+- **Material Type**: `pdf`, `video_link`, `ppt`, `pptx`, `video`.
 - **Challenge Difficulty**: `easy`, `medium`, `hard`.
 - **Quiz Mode**: `practice`, `exam`.
-- **Question Type**: `multiple_choice`, `true_false`, `fill_in_blank`.
+- **Question Type**: `multiple_choice`, `true_false`.
 - **Thread Status**: `open`, `resolved`, `closed`.
 - **Report Status**: `pending`, `resolved`, `escalated`.
+- **Report Reason**: `spam`, `plagiarism`, `offensive_language`, `academic_dishonesty`, `other`.
 - **Vote Values**: `1` (Upvote) or `-1` (Downvote).
+- **Professor App Status**: `approved`, `rejected`.
 
 ---
 
