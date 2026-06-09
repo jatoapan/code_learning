@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -14,35 +13,29 @@ class CourseEnrollmentController extends Controller
 {
     public function __construct(private CourseService $courseService) {}
 
-    public function enroll(Request $request, $id)
-    {
+    public function enroll(Request $request, $id) {
         $course = Course::findOrFail($id);
         
-        $exists = CourseUser::where('course_id', $course->id)->where('user_id', $request->user()->id)->exists();
-        if ($exists) {
+        if ($course->status !== 'public' && !Gate::allows('update', $course)) {
+            abort(403, 'No puedes matricularte en un curso privado o en borrador.');
+        }
+        
+        if (CourseUser::where('course_id', $course->id)->where('user_id', $request->user()->id)->exists()) {
             return response()->json(['message' => 'Already enrolled'], 409);
         }
 
-        $pivot = $this->courseService->enrollUser($course, $request->user());
-
-        return response()->json(['message' => 'Successfully enrolled', 'data' => $pivot], 201);
+        return response()->json(['message' => 'Successfully enrolled', 'data' => $this->courseService->enrollUser($course, $request->user())], 201);
     }
 
-    public function drop(Request $request, $id)
-    {
+    public function drop(Request $request, $id) {
         $course = Course::findOrFail($id);
         $this->courseService->dropUser($course, $request->user());
-
         return response()->json(['message' => 'Course dropped successfully']);
     }
 
-    public function manualEnroll(ManualEnrollRequest $request, $id)
-    {
+    public function manualEnroll(ManualEnrollRequest $request, $id) {
         $course = Course::findOrFail($id);
         Gate::authorize('update', $course);
-
-        $pivot = $this->courseService->manualEnrollUser($course, $request->validated());
-
-        return response()->json(['message' => 'User manually enrolled', 'data' => $pivot], 201);
+        return response()->json(['message' => 'User manually enrolled', 'data' => $this->courseService->manualEnrollUser($course, $request->validated())], 201);
     }
 }
