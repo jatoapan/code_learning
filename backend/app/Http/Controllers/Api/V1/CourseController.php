@@ -52,7 +52,7 @@ class CourseController extends Controller
         $isEnrolled = $user && \App\Models\CourseUser::where('course_id', $course->id)->where('user_id', $user->id)->exists();
         $isAdmin = $user && ($user->hasRole('admin') || $user->hasRole('moderator'));
 
-        if ($course->status !== 'public' && !$isOwner && !$isEnrolled && !$isAdmin) {
+        if ($course->status->value !== 'public' && !$isOwner && !$isEnrolled && !$isAdmin) {
             return response()->json(['message' => 'Acceso denegado: El curso no es público.'], 403);
         }
 

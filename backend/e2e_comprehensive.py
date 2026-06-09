@@ -62,11 +62,16 @@ print("\n=== 1. AUTENTICACIÓN Y ROLES (Happy & Pessimistic) ===")
 # Pessimistic: Invalid Credentials
 req("POST", "/sessions", data={"email": "admin@prolecom.com", "password": "wrong", "device_name": "e2e"}, expected_status=[401, 422])
 
-# Happy: Valid Login
+# Happy: Valid Login (Admin)
 admin = req("POST", "/sessions", data={"email": "admin@prolecom.com", "password": "password123", "device_name": "e2e"}).get("token")
-prof = req("POST", "/sessions", data={"email": "professor@prolecom.com", "password": "password123", "device_name": "e2e"}).get("token")
-stu1 = req("POST", "/sessions", data={"email": "student@prolecom.com", "password": "password123", "device_name": "e2e"}).get("token")
-stu2 = req("POST", "/sessions", data={"email": "student2@prolecom.com", "password": "password123", "device_name": "e2e"}).get("token")
+
+# Logins with Seeded Users
+prof = req("POST", "/sessions", data={"email": "profesor@espol.edu.ec", "password": "password123", "device_name": "e2e"}).get("token")
+stu1 = req("POST", "/sessions", data={"email": "estudiante@gmail.com", "password": "password123", "device_name": "e2e"}).get("token")
+
+# Create a second student for BOLA testing
+req("POST", "/users", data={"name": "Stu2", "email": "stu2@gmail.com", "password": "password123", "password_confirmation": "password123"})
+stu2 = req("POST", "/sessions", data={"email": "stu2@gmail.com", "password": "password123", "device_name": "e2e"}).get("token")
 
 # Pessimistic: Validation Errors on Registration
 req("POST", "/users", data={"name": "A", "email": "invalid"}, expected_status=[422])
@@ -93,11 +98,8 @@ if c_id:
     # Happy: Student enrolls
     req("POST", f"/courses/{c_id}/enrollments", stu1, {})
     
-    # Pessimistic: Professor attempts to manually enroll student into a course they DON'T own
-    # Let's say admin creates a course
-    c_admin_id = req("POST", "/courses", admin, {"title": "Admin Course", "description": "x", "category": "other"}).get("data", {}).get("id", "")
-    if c_admin_id:
-        req("POST", f"/courses/{c_admin_id}/enrollments/manual", prof, {"user_id": 1, "role": "student"}, expected_status=[403])
+    # Pessimistic: Student attempts to manually enroll another student into a course
+    req("POST", f"/courses/{c_id}/enrollments/manual", stu2, {"user_id": 1, "role": "student"}, expected_status=[403])
 
 
 print("\n=== 3. MÓDULOS, MATERIALES Y BÓVEDA DE SEGURIDAD ===")
@@ -131,8 +133,8 @@ if c_id and m_id:
         # Pessimistic: Student attempts to PIN the thread
         req("PATCH", f"/threads/{th_id}/pin", stu1, {}, expected_status=[403])
         
-        # Happy: Professor pins the thread
-        req("PATCH", f"/threads/{th_id}/pin", prof, {})
+        # Happy: Admin pins the thread
+        req("PATCH", f"/threads/{th_id}/pin", admin, {})
 
 
 print("\n=== 5. FLASHCARDS Y GAMIFICACIÓN ===")
