@@ -17,8 +17,9 @@ def req(method, path, token="", data=None):
     request = urllib.request.Request(url, data=req_data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(request) as response:
-            res_body = response.read().decode('utf-8')
+            raw_body = response.read()
             try:
+                res_body = raw_body.decode('utf-8')
                 res_json = json.loads(res_body) if res_body else {}
             except:
                 res_json = {}
@@ -29,10 +30,43 @@ def req(method, path, token="", data=None):
         # print("   " + e.read().decode('utf-8'))
         return {}
 
+import uuid
+def upload_file(path, token, filepath):
+    url = BASE_URL + path
+    boundary = uuid.uuid4().hex
+    try:
+        with open(filepath, 'rb') as f: file_content = f.read()
+    except Exception as e:
+        print(f"❌ Error leyendo {filepath}: {e}")
+        return {}
+    filename = filepath.split('/')[-1]
+    body = (
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\nTest PDF\r\n"
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"type\"\r\n\r\npdf\r\n"
+        f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{filename}\"\r\n"
+        f"Content-Type: application/pdf\r\n\r\n"
+    ).encode('utf-8') + file_content + f"\r\n--{boundary}--\r\n".encode('utf-8')
+    headers = {'Authorization': f'Bearer {token}', 'Content-Type': f'multipart/form-data; boundary={boundary}', 'Accept': 'application/json'}
+    request = urllib.request.Request(url, data=body, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(request) as response:
+            raw_body = response.read()
+            try:
+                res_json = json.loads(raw_body.decode('utf-8'))
+            except:
+                res_json = {}
+            print(f"✅ POST {path} (File Upload) -> HTTP {response.status}")
+            return res_json
+    except urllib.error.HTTPError as e:
+        print(f"❌ POST {path} (File Upload) -> HTTP {e.code}")
+        return {}
+
 print("=================================================")
 print(" 🟢 INICIANDO PRUEBA ULTRA-EXHAUSTIVA (100+ ENDPOINTS) 🟢")
 print("=================================================")
-req("GET", "/dev-reset-db")
+print("Resetting database on Railway securely...")
+req("GET", "/dev-reset-db?token=railway_prolecom_secret_2026")
+print("Database reset complete.")
 time.sleep(3)
 
 admin = req("POST", "/sessions", data={"email":"admin@prolecom.com", "password":"password123", "device_name":"e2e"}).get("token")
@@ -84,12 +118,17 @@ if c_id:
         req("PUT", f"/modules/{m_id}", prof, {"title":"M1 Edit"})
         req("PATCH", f"/modules/{m_id}/items-order", prof, {"items":[]})
         
-        mat_res = req("POST", f"/modules/{m_id}/materials", prof, {"title":"Mat", "type":"video_link", "content":"x", "order":1})
+        mat_res = upload_file(f"/modules/{m_id}/materials", prof, "Sprints.pdf")
         mat_id = mat_res.get("data", {}).get("id", "")
         if mat_id:
-            req("PUT", f"/materials/{mat_id}", prof, {"title":"Mat Edit", "type":"video_link"})
+            req("PUT", f"/materials/{mat_id}", prof, {"title":"Mat Edit", "type":"pdf"})
             req("GET", f"/materials/{mat_id}", stu)
             req("POST", f"/materials/{mat_id}/views", stu, {})
+            print("   [!] Probando Bóveda de Seguridad (PB13) con Archivo Real")
+            print("   (1/2) Intento sin Token (Hackeo) - Esperamos ❌ HTTP 401")
+            req("GET", f"/materials/{mat_id}/download", "")
+            print("   (2/2) Intento con Token (Legítimo) - Esperamos ✅ HTTP 200")
+            req("GET", f"/materials/{mat_id}/download", stu)
 
 print("\n--- FORUMS ---")
 if c_id and m_id:

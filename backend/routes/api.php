@@ -11,8 +11,14 @@ Route::prefix('v1')->group(function () {
         ]); 
     });
 
-    // BOTON NUCLEAR TEMPORAL: Resetea y siembra la DB sin ir a la consola
-    // Dev DB Reset Endpoint removed for security. Use artisan commands instead.
+    // Endpoint de testing E2E protegido por un token secreto
+    Route::get('/dev-reset-db', function (\Illuminate\Http\Request $request) {
+        if ($request->query('token') !== 'railway_prolecom_secret_2026') {
+            abort(403, 'Acceso Denegado. Token inválido.');
+        }
+        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
+        return response()->json(['message' => 'Base de datos destruida y re-sembrada exitosamente (Protegido por Token).']);
+    });
 
     // 4.1 Auth
     Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register'])->middleware('throttle:10,1');
