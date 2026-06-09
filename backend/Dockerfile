@@ -22,7 +22,7 @@ RUN composer install --optimize-autoloader --no-dev \
     && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # 5. Configurar puertos en tiempo de ejecución (RUNTIME) y arrancar Apache
-CMD rm -f /etc/apache2/mods-enabled/mpm_event.load /etc/apache2/mods-enabled/mpm_worker.load \
+CMD rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.* \
     && sed -i "s/^Listen .*/Listen ${PORT:-8080}/" /etc/apache2/ports.conf \
     && sed -i "s/<VirtualHost .*/<VirtualHost \*:${PORT:-8080}>/" /etc/apache2/sites-available/000-default.conf \
     && exec apache2-foreground
