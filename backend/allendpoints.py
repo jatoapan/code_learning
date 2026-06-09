@@ -240,11 +240,11 @@ if ca_id: req("POST", f"/challenge-attempts/{ca_id}/feedback", prof, {"feedback"
 
 
 req("POST", "/flashcard-imports", prof, {"deck_id": 1, "quiz_id": qz_id})
-req("GET", f"/flashcard-decks/1/due-flashcards", stu)
+req("GET", f"/flashcard-decks/1/due-flashcards", prof)
 fc_id = req("POST", "/flashcard-decks/1/flashcards", prof, {"question_text":"q", "answer_text":"a"}).get("data",{}).get("id")
 if fc_id:
     req("PUT", f"/flashcards/{fc_id}", prof, {"question_text":"q2", "answer_text":"a2"})
-    req("PATCH", f"/flashcards/{fc_id}", stu, {"quality":4})
+    req("PATCH", f"/flashcards/{fc_id}", prof, {"quality":4})
     req("DELETE", f"/flashcards/{fc_id}", prof)
 
 req("POST", f"/practice-quizzes", stu, {"quiz_id": qz_id, "question_count":5})
