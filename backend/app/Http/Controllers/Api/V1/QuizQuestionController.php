@@ -5,64 +5,33 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
-use Illuminate\Http\Request;
+use App\Services\GamificationService;
+use App\Http\Requests\StoreQuizQuestionRequest;
+use App\Http\Requests\UpdateQuizQuestionRequest;
+use App\Http\Requests\UpdateQuizAnswersRequest;
 use Illuminate\Support\Facades\Gate;
 
 class QuizQuestionController extends Controller
 {
-    public function store(Request $request, $quizId)
+    protected $gamificationService;
+
+    public function __construct(GamificationService $gamificationService)
     {
-        $validated = $request->validate([
-            'question_text' => 'required|string',
-            'type' => 'required|string|in:multiple_choice,true_false',
-            'points' => 'required|integer|min:1',
-            'options' => 'required|array', 
-            'correct_answer' => 'required|string',
-            'explanation' => 'nullable|string',
-        ]);
+        $this->gamificationService = $gamificationService;
+    }
 
+    public function store(StoreQuizQuestionRequest $request, $quizId)
+    {
         $quiz = Quiz::findOrFail($quizId);
-        $moduleItem = $quiz->moduleItems()->with('module.course')->first();
-        if ($moduleItem) {
-            Gate::authorize('update', $moduleItem->module->course);
-        }
-
-        $question = new QuizQuestion();
-        $question->quiz_id = $quiz->id;
-        $question->question_text = $validated['question_text'];
-        $question->type = $validated['type'];
-        $question->points = $validated['points'];
-        $question->explanation = $validated['explanation'] ?? null;
-        $question->save();
-
-        foreach ($validated['options'] as $option) {
-            \App\Models\QuizAnswer::create([
-                'question_id' => $question->id,
-                'answer_text' => $option,
-                'is_correct' => ($option === $validated['correct_answer'])
-            ]);
-        }
+        $question = $this->gamificationService->createQuizQuestion($quiz, $request->validated());
 
         return response()->json(['message' => 'Question added successfully', 'data' => $question], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateQuizQuestionRequest $request, $id)
     {
         $question = QuizQuestion::findOrFail($id);
-        
-        $moduleItem = $question->quiz->moduleItems()->with('module.course')->first();
-        if ($moduleItem) {
-            Gate::authorize('update', $moduleItem->module->course);
-        }
-
-        $validated = $request->validate([
-            'question_text' => 'sometimes|required|string',
-            'type' => 'sometimes|required|string|in:multiple_choice,true_false',
-            'points' => 'sometimes|required|integer|min:1',
-            'explanation' => 'nullable|string',
-        ]);
-        
-        $question->update($validated);
+        $question = $this->gamificationService->updateQuizQuestion($question, $request->validated());
         
         return response()->json(['message' => 'Question updated successfully', 'data' => $question]);
     }
@@ -76,42 +45,16 @@ class QuizQuestionController extends Controller
             Gate::authorize('update', $moduleItem->module->course);
         }
 
-        $question->delete();
+        $this->gamificationService->deleteQuizQuestion($question);
         
         return response()->json(['message' => 'Question deleted successfully']);
     }
 
-    public function updateAnswers(Request $request, $id)
+    public function updateAnswers(UpdateQuizAnswersRequest $request, $id)
     {
         $question = QuizQuestion::findOrFail($id);
-        
-        $moduleItem = $question->quiz->moduleItems()->with('module.course')->first();
-        if ($moduleItem) {
-            Gate::authorize('update', $moduleItem->module->course);
-        }
-
-        $validated = $request->validate([
-            'answers' => 'required|array',
-            'answers.*.id' => 'nullable|exists:quiz_answers,id',
-            'answers.*.answer_text' => 'required|string',
-            'answers.*.is_correct' => 'required|boolean',
-        ]);
-
-        foreach ($validated['answers'] as $answerData) {
-            if (isset($answerData['id'])) {
-                $answer = \App\Models\QuizAnswer::where('question_id', $question->id)->findOrFail($answerData['id']);
-                $answer->update([
-                    'answer_text' => $answerData['answer_text'],
-                    'is_correct' => $answerData['is_correct']
-                ]);
-            } else {
-                \App\Models\QuizAnswer::create([
-                    'question_id' => $question->id,
-                    'answer_text' => $answerData['answer_text'],
-                    'is_correct' => $answerData['is_correct']
-                ]);
-            }
-        }
+        $validated = $request->validated();
+        $this->gamificationService->updateQuizAnswers($question, $validated['answers']);
 
         return response()->json(['message' => 'Answers updated successfully']);
     }

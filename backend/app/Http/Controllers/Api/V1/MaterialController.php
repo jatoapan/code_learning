@@ -5,59 +5,40 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Material;
 use App\Models\Module;
+use App\Http\Requests\StoreMaterialRequest;
+use App\Http\Requests\UpdateMaterialRequest;
+use App\Services\SyllabusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class MaterialController extends Controller
 {
+    public function __construct(private SyllabusService $syllabusService) {}
+
     public function show($id)
     {
         $material = Material::findOrFail($id);
         return response()->json(['data' => $material]);
     }
 
-    public function store(Request $request, $id)
+    public function store(StoreMaterialRequest $request, $id)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'type' => 'required|string|in:pdf,video_link,ppt,pptx,video',
-            'content' => 'nullable|string', // URL o texto
-            'file' => 'nullable|file|mimes:pdf,ppt,pptx,mp4,avi,mkv|max:51200', // Hasta 50MB
-            'estimated_minutes' => 'nullable|integer',
-            'is_required' => 'nullable|boolean',
-        ]);
-
         $module = Module::findOrFail($id);
         Gate::authorize('update', $module->course);
 
-        $material = new Material();
-        $material->title = $validated['title'];
-        $material->type = $validated['type'];
+        $file = $request->file('file');
         
-        // Lógica de Alta Seguridad (Bóveda Privada):
-        if ($request->hasFile('file')) {
-            // Guardamos el archivo en el disco 'local' (protegido, sin acceso a internet)
-            $path = $request->file('file')->store('materials', 'local');
-            $material->file_path = $path; // Guardamos solo el ID interno
-        } else {
-            $material->file_path = $validated['content'] ?? '';
-        }
-        
-        $material->creator_id = $request->user()->id;
-        $material->save();
-
-        // Enlazar usando la tabla polimorfica
-        \App\Models\ModuleItem::create([
-            'module_id' => $module->id,
-            'itemable_type' => Material::class,
-            'itemable_id' => $material->id,
-            'order' => 1
-        ]);
+        $material = $this->syllabusService->createMaterial(
+            $module, 
+            $request->validated(), 
+            $file, 
+            $request->user()
+        );
 
         return response()->json(['message' => 'Material created successfully', 'data' => $material], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateMaterialRequest $request, $id)
     {
         $material = Material::findOrFail($id);
         
@@ -66,15 +47,7 @@ class MaterialController extends Controller
             Gate::authorize('update', $moduleItem->module->course);
         }
 
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'type' => 'sometimes|required|string|in:pdf,video_link,ppt,pptx,video',
-            'content' => 'sometimes|required|string',
-            'estimated_minutes' => 'sometimes|required|integer|min:1',
-            'is_required' => 'boolean',
-        ]);
-
-        $material->update($validated);
+        $material = $this->syllabusService->updateMaterial($material, $request->validated());
 
         return response()->json(['message' => 'Material updated', 'data' => $material]);
     }
@@ -88,7 +61,8 @@ class MaterialController extends Controller
             Gate::authorize('update', $moduleItem->module->course);
         }
 
-        $material->delete();
+        $this->syllabusService->deleteMaterial($material);
+        
         return response()->json(['message' => 'Material deleted']);
     }
 

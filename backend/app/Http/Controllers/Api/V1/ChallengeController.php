@@ -8,9 +8,19 @@ use App\Models\Challenge;
 use App\Models\ModuleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use App\Services\ChallengeService;
+use App\Http\Requests\StoreChallengeRequest;
+use App\Http\Requests\UpdateChallengeRequest;
 
 class ChallengeController extends Controller
 {
+    protected $challengeService;
+
+    public function __construct(ChallengeService $challengeService)
+    {
+        $this->challengeService = $challengeService;
+    }
+
     public function indexByModule($moduleId)
     {
         $module = Module::findOrFail($moduleId);
@@ -34,56 +44,27 @@ class ChallengeController extends Controller
         return response()->json(['data' => $challenge]);
     }
 
-    public function store(Request $request, $moduleId)
+    public function store(StoreChallengeRequest $request, $moduleId)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'difficulty' => 'required|string|in:easy,medium,hard',
-            'language_id' => 'required|integer',
-            'language_name' => 'required|string',
-            'points' => 'required|integer|min:0',
-            'starter_code' => 'nullable|string',
-        ]);
-
         $module = Module::findOrFail($moduleId);
         Gate::authorize('update', $module->course);
 
-        $challenge = new Challenge();
-        $challenge->module_id = $module->id;
-        $challenge->title = $validated['title'];
-        $challenge->description = $validated['description'];
-        $challenge->difficulty = $validated['difficulty'];
-        $challenge->language_id = $validated['language_id'];
-        $challenge->language_name = $validated['language_name'];
-        $challenge->starter_code = $validated['starter_code'] ?? null;
-        $challenge->points = $validated['points'];
-        $challenge->creator_id = $request->user()->id;
-        $challenge->status = 'draft';
-        $challenge->save();
-
-        ModuleItem::create([
-            'module_id' => $module->id,
-            'itemable_type' => Challenge::class,
-            'itemable_id' => $challenge->id,
-            'order' => 1
-        ]);
+        $challenge = $this->challengeService->createChallenge(
+            $request->validated(),
+            $module,
+            $request->user()->id
+        );
 
         return response()->json(['message' => 'Challenge created successfully', 'data' => $challenge], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateChallengeRequest $request, $id)
     {
         $challenge = Challenge::findOrFail($id);
         Gate::authorize('update', $challenge->module->course);
         
-        $validated = $request->validate([
-            'title' => 'string|max:255',
-            'description' => 'string',
-            'difficulty' => 'string|in:easy,medium,hard',
-            'points' => 'integer|min:0',
-        ]);
-        $challenge->update($validated);
+        $challenge = $this->challengeService->updateChallenge($challenge, $request->validated());
+
         return response()->json(['message' => 'Updated successfully', 'data' => $challenge]);
     }
 
@@ -92,7 +73,8 @@ class ChallengeController extends Controller
         $challenge = Challenge::findOrFail($id);
         Gate::authorize('update', $challenge->module->course);
         
-        $challenge->delete();
+        $this->challengeService->deleteChallenge($challenge);
+
         return response()->json(['message' => 'Deleted successfully']);
     }
 

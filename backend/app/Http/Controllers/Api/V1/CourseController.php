@@ -8,38 +8,22 @@ use App\Models\CourseUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Gate;
+use App\Services\CourseService;
+use App\Http\Requests\StoreCourseRequest;
 
 class CourseController extends Controller
 {
+    public function __construct(private CourseService $courseService) {}
+
     public function index(Request $request)
     {
         $courses = Course::with('owner:id,name,avatar_path')->paginate(15);
         return response()->json(['data' => $courses]);
     }
 
-    public function store(Request $request)
+    public function store(StoreCourseRequest $request)
     {
-        $validated = $request->validate([
-            'category' => 'required|string|max:50',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'image_path' => 'nullable|string|max:255',
-            'status' => 'required|string|in:draft,public,unlisted',
-            'has_leaderboard' => 'boolean',
-        ]);
-
-        $course = new Course($validated);
-        $course->owner_id = $request->user()->id;
-        $course->slug = Str::slug($validated['title']) . '-' . uniqid();
-        $course->save();
-
-        CourseUser::create([
-            'course_id' => $course->id,
-            'user_id' => $request->user()->id,
-            'role' => 'professor',
-            'status' => 'enrolled'
-        ]);
-
+        $course = $this->courseService->createCourse($request->validated(), $request->user());
         return response()->json(['message' => 'Course created successfully', 'data' => $course], 201);
     }
 
@@ -47,14 +31,7 @@ class CourseController extends Controller
     {
         $course = Course::with(['modules.items.itemable', 'owner:id,name'])->findOrFail($id);
         
-        $user = auth()->guard('api')->user();
-        $isOwner = $user && $course->owner_id === $user->id;
-        $isEnrolled = $user && \App\Models\CourseUser::where('course_id', $course->id)->where('user_id', $user->id)->exists();
-        $isAdmin = $user && ($user->hasRole('admin') || $user->hasRole('moderator'));
-
-        if ($course->status->value !== 'public' && !$isOwner && !$isEnrolled && !$isAdmin) {
-            return response()->json(['message' => 'Acceso denegado: El curso no es público.'], 403);
-        }
+        Gate::authorize('view', $course);
 
         return response()->json(['data' => $course]);
     }

@@ -5,41 +5,27 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\Quiz;
-use App\Models\ModuleItem;
 use Illuminate\Http\Request;
-use App\Enums\QuizStatus;
+use App\Services\GamificationService;
+use App\Http\Requests\StoreQuizRequest;
+use App\Http\Requests\UpdateQuizRequest;
+use App\Http\Requests\SubmitQuizAttemptRequest;
+use App\Http\Requests\GeneratePracticeQuizRequest;
 use Illuminate\Support\Facades\Gate;
 
 class QuizController extends Controller
 {
-    public function store(Request $request, $moduleId)
+    protected $gamificationService;
+
+    public function __construct(GamificationService $gamificationService)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'mode' => 'required|string|in:practice,exam',
-            'time_limit_minutes' => 'nullable|integer',
-            'passing_score' => 'required|integer|min:0|max:100',
-        ]);
+        $this->gamificationService = $gamificationService;
+    }
 
+    public function store(StoreQuizRequest $request, $moduleId)
+    {
         $module = Module::findOrFail($moduleId);
-        Gate::authorize('update', $module->course);
-
-        $quiz = new Quiz();
-        $quiz->title = $validated['title'];
-        $quiz->description = $validated['description'] ?? null;
-        $quiz->mode = $validated['mode'];
-        $quiz->time_limit = $validated['time_limit_minutes'] ?? null;
-        $quiz->passing_score = $validated['passing_score'];
-        $quiz->status = QuizStatus::Draft->value;
-        $quiz->save();
-
-        ModuleItem::create([
-            'module_id' => $module->id,
-            'itemable_type' => Quiz::class,
-            'itemable_id' => $quiz->id,
-            'order' => 1
-        ]);
+        $quiz = $this->gamificationService->createQuiz($module, $request->validated());
 
         return response()->json(['message' => 'Quiz created successfully', 'data' => $quiz], 201);
     }
@@ -50,29 +36,11 @@ class QuizController extends Controller
         return response()->json(['data' => $quiz]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateQuizRequest $request, $id)
     {
         $quiz = Quiz::findOrFail($id);
-        
-        $moduleItem = $quiz->moduleItems()->with('module.course')->first();
-        if ($moduleItem) {
-            Gate::authorize('update', $moduleItem->module->course);
-        }
+        $quiz = $this->gamificationService->updateQuiz($quiz, $request->validated());
 
-        $validated = $request->validate([
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'mode' => 'sometimes|required|string|in:practice,exam',
-            'time_limit_minutes' => 'nullable|integer',
-            'passing_score' => 'sometimes|required|integer|min:0|max:100',
-        ]);
-
-        if (isset($validated['time_limit_minutes'])) {
-            $validated['time_limit'] = $validated['time_limit_minutes'];
-            unset($validated['time_limit_minutes']);
-        }
-
-        $quiz->update($validated);
         return response()->json(['message' => 'Quiz updated successfully', 'data' => $quiz]);
     }
 
@@ -85,25 +53,15 @@ class QuizController extends Controller
             Gate::authorize('update', $moduleItem->module->course);
         }
 
-        $quiz->delete();
+        $this->gamificationService->deleteQuiz($quiz);
         return response()->json(['message' => 'Quiz deleted successfully']);
     }
 
-    public function submit(Request $request, $id)
+    public function submit(SubmitQuizAttemptRequest $request, $id)
     {
         $quiz = Quiz::findOrFail($id);
-        $validated = $request->validate([
-            'answers' => 'required|array'
-        ]);
-
-        $attempt = \App\Models\QuizAttempt::create([
-            'quiz_id' => $quiz->id,
-            'user_id' => $request->user()->id,
-            'score' => 0,
-            'passed' => false,
-            'started_at' => now(),
-            'completed_at' => now(),
-        ]);
+        $validated = $request->validated();
+        $attempt = $this->gamificationService->submitQuizAttempt($quiz, $request->user(), $validated['answers']);
 
         return response()->json(['message' => 'Attempt submitted', 'data' => $attempt], 201);
     }
@@ -114,21 +72,13 @@ class QuizController extends Controller
         return response()->json(['data' => $attempt]);
     }
 
-    public function generatePracticeQuiz(Request $request)
+    public function generatePracticeQuiz(GeneratePracticeQuizRequest $request)
     {
-        $validated = $request->validate([
-            'quiz_id' => 'required|exists:quizzes,id',
-            'question_count' => 'nullable|integer|min:1'
-        ]);
-
+        $validated = $request->validated();
         $quiz = Quiz::findOrFail($validated['quiz_id']);
         $count = $validated['question_count'] ?? 10;
-
-        $questions = \App\Models\QuizQuestion::where('quiz_id', $quiz->id)
-            ->inRandomOrder()
-            ->limit($count)
-            ->with('answers')
-            ->get();
+        
+        $questions = $this->gamificationService->generatePracticeQuiz($quiz, $count);
 
         return response()->json(['data' => $questions]);
     }

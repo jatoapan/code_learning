@@ -6,43 +6,33 @@ use App\Http\Controllers\Controller;
 use App\Models\Challenge;
 use App\Models\ChallengeTestCase;
 use Illuminate\Http\Request;
+use App\Services\ChallengeService;
+use App\Http\Requests\StoreChallengeTestCaseRequest;
+use App\Http\Requests\UpdateChallengeTestCaseRequest;
 
 class ChallengeTestCaseController extends Controller
 {
-    public function store(Request $request, $challengeId)
-    {
-        $validated = $request->validate([
-            'input' => 'nullable|string',
-            'expected_output' => 'required|string',
-            'is_hidden' => 'boolean',
-        ]);
+    protected $challengeService;
 
+    public function __construct(ChallengeService $challengeService)
+    {
+        $this->challengeService = $challengeService;
+    }
+
+    public function store(StoreChallengeTestCaseRequest $request, $challengeId)
+    {
         $challenge = Challenge::findOrFail($challengeId);
 
-        $testCase = new ChallengeTestCase();
-        $testCase->challenge_id = $challenge->id;
-        $testCase->input = $validated['input'] ?? null;
-        $testCase->expected_output = $validated['expected_output'];
-        $testCase->is_hidden = $validated['is_hidden'] ?? false;
-        $testCase->save();
+        $testCase = $this->challengeService->createTestCase($challenge, $request->validated());
 
         return response()->json(['message' => 'Test case added successfully', 'data' => $testCase], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateChallengeTestCaseRequest $request, $id)
     {
         $testCase = ChallengeTestCase::findOrFail($id);
 
-        $validated = $request->validate([
-            'input' => 'nullable|string',
-            'expected_output' => 'required|string',
-            'is_hidden' => 'boolean',
-        ]);
-
-        $testCase->input = $validated['input'] ?? $testCase->input;
-        $testCase->expected_output = $validated['expected_output'] ?? $testCase->expected_output;
-        $testCase->is_hidden = $validated['is_hidden'] ?? $testCase->is_hidden;
-        $testCase->save();
+        $testCase = $this->challengeService->updateTestCase($testCase, $request->validated());
 
         return response()->json(['message' => 'Test case updated successfully', 'data' => $testCase]);
     }
@@ -50,7 +40,8 @@ class ChallengeTestCaseController extends Controller
     public function destroy($id)
     {
         $testCase = ChallengeTestCase::findOrFail($id);
-        $testCase->delete();
+        
+        $this->challengeService->deleteTestCase($testCase);
 
         return response()->json(['message' => 'Test case deleted successfully']);
     }

@@ -31,4 +31,17 @@ class CoursePolicy
             ->whereIn('role', ['ta', 'professor'])
             ->exists();
     }
+
+    public function view(?User $user, Course $course): bool
+    {
+        if ($course->status->value === 'public') return true;
+        if (!$user) return false;
+        
+        if ($user->hasRole('admin') || $user->hasRole('moderator')) return true;
+        if ($course->owner_id === $user->id) return true;
+
+        return \App\Models\CourseUser::where('course_id', $course->id)
+            ->where('user_id', $user->id)
+            ->exists();
+    }
 }
