@@ -185,7 +185,7 @@ Estructura el orden unificado del contenido académico del módulo (PDF, videos,
 *   `id` (Unsigned BigInt, PK, Auto Increment)
 *   `title` (Varchar 255)
 *   `description` (Text, Nullable)
-*   `type` (Varchar 50) — Tipo de material (e.g., 'pdf', 'video_link', 'ppt', 'pptx').
+*   `type` (Varchar 50) — Tipo de material (e.g., 'pdf', 'video_link', 'ppt', 'pptx', 'video').
 *   `file_path` (Varchar 255) — URL o Path en local/S3.
 *   `file_size` (Unsigned BigInt, Nullable) — Validación de subida (máx. 50MB).
 *   `creator_id` (UUID CHAR 36, Nullable, FK → `users.id`, Set Null) — Registra quién subió el archivo (para auditoría). Se establece NULL si el usuario es anonimizado permanentemente.
