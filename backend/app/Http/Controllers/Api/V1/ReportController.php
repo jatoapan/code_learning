@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -10,17 +9,15 @@ use App\Enums\ReportStatus;
 
 class ReportController extends Controller
 {
-    public function index(Request $request)
-    {
-        $reports = Report::with('reporter:id,name', 'reportable')
-                         ->orderBy('created_at', 'desc')
-                         ->paginate(20);
-                         
-        return response()->json(['data' => $reports]);
+    public function __construct() {
+        $this->middleware('role:admin|moderator')->except(['store']);
     }
 
-    public function store(Request $request)
-    {
+    public function index(Request $request) {
+        return response()->json(['data' => Report::with('reporter:id,name', 'reportable')->orderBy('created_at', 'desc')->paginate(20)]);
+    }
+
+    public function store(Request $request) {
         $validated = $request->validate([
             'reportable_type' => 'required|string',
             'reportable_id' => 'required|string',
@@ -37,26 +34,22 @@ class ReportController extends Controller
         $report->status = ReportStatus::Pending->value;
         $report->save();
 
-        return response()->json(['message' => 'Report submitted successfully', 'data' => $report], 201);
+        return response()->json(['message' => 'Report submitted', 'data' => $report], 201);
     }
 
-    public function resolve(Request $request, $id)
-    {
+    public function resolve(Request $request, $id) {
         $report = Report::findOrFail($id);
         $report->status = ReportStatus::Resolved->value;
         $report->resolved_by = $request->user()->id;
         $report->resolved_at = now();
         $report->save();
-
         return response()->json(['message' => 'Report resolved', 'data' => $report]);
     }
 
-    public function escalate(Request $request, $id)
-    {
+    public function escalate(Request $request, $id) {
         $report = Report::findOrFail($id);
         $report->status = ReportStatus::Escalated->value;
         $report->save();
-
         return response()->json(['message' => 'Report escalated', 'data' => $report]);
     }
 }
