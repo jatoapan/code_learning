@@ -21,7 +21,7 @@ class ChallengeService
         $this->judge0 = $judge0;
     }
 
-    public function createChallenge(array $data, Module $module, int $creatorId)
+    public function createChallenge(array $data, Module $module, string $creatorId)
     {
         return DB::transaction(function () use ($data, $module, $creatorId) {
             $challenge = new Challenge();
@@ -86,7 +86,7 @@ class ChallengeService
         $testCase->delete();
     }
 
-    public function submitAttempt(Challenge $challenge, array $data, int $userId)
+    public function submitAttempt(Challenge $challenge, array $data, string $userId)
     {
         if ($challenge->testCases->isEmpty()) {
             throw new InvalidArgumentException('This challenge has no test cases.');

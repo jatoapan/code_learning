@@ -188,7 +188,7 @@ class GamificationService
         $flashcard->delete();
     }
 
-    public function importFlashcardsFromQuiz(FlashcardDeck $deck, int $quizId): void
+    public function importFlashcardsFromQuiz(FlashcardDeck $deck, string $quizId): void
     {
         DB::transaction(function () use ($deck, $quizId) {
             $questions = QuizQuestion::where('quiz_id', $quizId)->get();
