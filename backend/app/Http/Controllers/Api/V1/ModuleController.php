@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -15,41 +14,31 @@ class ModuleController extends Controller
 {
     public function __construct(private SyllabusService $syllabusService) {}
 
-    public function store(StoreModuleRequest $request, $id)
-    {
+    public function store(StoreModuleRequest $request, $id) {
         $course = Course::findOrFail($id);
         Gate::authorize('update', $course);
-
-        $module = $this->syllabusService->createModule($course, $request->validated());
-
-        return response()->json(['message' => 'Module created successfully', 'data' => $module], 201);
+        return response()->json(['message' => 'Module created', 'data' => $this->syllabusService->createModule($course, $request->validated())], 201);
     }
 
-    public function update(UpdateModuleRequest $request, $id)
-    {
+    public function update(UpdateModuleRequest $request, $id) {
         $module = Module::findOrFail($id);
         Gate::authorize('update', $module->course);
-
-        $module = $this->syllabusService->updateModule($module, $request->validated());
-
-        return response()->json(['message' => 'Module updated', 'data' => $module]);
+        return response()->json(['message' => 'Module updated', 'data' => $this->syllabusService->updateModule($module, $request->validated())]);
     }
 
-    public function destroy($id)
-    {
+    public function destroy($id) {
         $module = Module::findOrFail($id);
         Gate::authorize('update', $module->course);
-        
         $this->syllabusService->deleteModule($module);
-        
         return response()->json(['message' => 'Module deleted']);
     }
 
-    public function reorderItems(Request $request, $id)
-    {
+    public function reorderItems(Request $request, $id) {
         $module = Module::findOrFail($id);
         Gate::authorize('update', $module->course);
+        $validated = $request->validate(['items' => 'required|array']);
         
+        $this->syllabusService->reorderItems($module, $validated['items']);
         return response()->json(['message' => 'Items reordered']);
     }
 }

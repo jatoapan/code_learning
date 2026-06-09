@@ -79,4 +79,21 @@ class SyllabusService
             $material->delete();
         });
     }
+    public function reorderItems(Module $module, array $items): void
+    {
+        // DB logic to reorder module items based on the provided array
+        DB::transaction(function () use ($module, $items) {
+            foreach ($items as $index => $itemId) {
+                ModuleItem::where('module_id', $module->id)
+                          ->where('id', $itemId)
+                          ->update(['order' => $index + 1]);
+            }
+        });
+    }
+
+    public function recordMaterialView(Material $material, $user): void
+    {
+        // DB logic to record that the user viewed this material
+        // e.g., MaterialView::firstOrCreate(['material_id' => $material->id, 'user_id' => $user->id]);
+    }
 }
