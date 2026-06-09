@@ -24,15 +24,12 @@ Route::prefix('v1')->group(function () {
     Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword'])->middleware('throttle:5,1');
     
     // Rutas protegidas
-    Route::middleware(['auth:sanctum', \App\Http\Middleware\Idempotency::class])->group(function () {
+    Route::middleware(['auth:api', \App\Http\Middleware\Idempotency::class])->group(function () {
         // Auth & Profile
         Route::delete('/sessions/current', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'logout']);
         Route::get('/user', [\App\Http\Controllers\Api\V1\UserController::class, 'me']);
         Route::put('/user', [\App\Http\Controllers\Api\V1\UserController::class, 'update']);
         Route::delete('/users/me', [\App\Http\Controllers\Api\V1\UserController::class, 'deactivate']);
-        
-        // 4.2 Institutions
-        Route::get('/institutions', [\App\Http\Controllers\Api\V1\InstitutionController::class, 'index']);
         
         // 4.3 Professor Applications
         Route::post('/professor-applications', [\App\Http\Controllers\Api\V1\ProfessorApplicationController::class, 'store']);
@@ -157,10 +154,6 @@ Route::prefix('v1')->group(function () {
 
         // Admin Routes
         Route::middleware('role:admin')->group(function () {
-            Route::post('/admin/institutions', [\App\Http\Controllers\Api\V1\InstitutionController::class, 'store']);
-            Route::put('/admin/institutions/{id}', [\App\Http\Controllers\Api\V1\InstitutionController::class, 'update']);
-            Route::delete('/admin/institutions/{id}', [\App\Http\Controllers\Api\V1\InstitutionController::class, 'destroy']);
-            Route::get('/admin/institutions/{id}/analytics', [\App\Http\Controllers\Api\V1\InstitutionController::class, 'analytics']);
             Route::get('/admin/logs', [\App\Http\Controllers\Api\V1\AdminLogController::class, 'index']);
             Route::get('/admin/settings', [\App\Http\Controllers\Api\V1\SystemSettingController::class, 'index']);
             Route::put('/admin/settings/{key}', [\App\Http\Controllers\Api\V1\SystemSettingController::class, 'update']);

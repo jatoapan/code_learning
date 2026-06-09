@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('avatar_path')->nullable();
             $table->string('status', 50)->default('active');
             $table->unsignedInteger('xp')->default(0);
-            $table->foreignId('institution_id')->nullable()->constrained('institutions')->nullOnDelete();
             $table->timestamp('email_verified_at')->nullable();
             $table->softDeletes();
             $table->timestamps();

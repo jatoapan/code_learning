@@ -51,11 +51,6 @@ req("GET", "/notifications/unread-count", prof)
 req("PATCH", "/notifications", prof, {})
 
 print("\n--- ADMIN & SUPPORT ---")
-inst_res = req("POST", "/admin/institutions", admin, {"name": "Test University", "slug": "test-uni", "type": "university"})
-inst_id = inst_res.get("data", {}).get("id", "")
-if inst_id:
-    req("PUT", f"/admin/institutions/{inst_id}", admin, {"name":"MIT Edit", "type":"university"})
-    req("GET", f"/admin/institutions/{inst_id}/analytics", admin)
 req("GET", "/admin/logs", admin)
 req("GET", "/admin/settings", admin)
 req("PUT", "/admin/settings/max_upload_mb", admin, {"value": "100"})
@@ -194,7 +189,6 @@ req("GET", "/support/users", admin)
 req("GET", f"/support/users/{stu_id}", admin)
 req("PUT", f"/support/users/{stu_id}/role", admin, {"roles":["student"]})
 req("PATCH", f"/support/users/{stu_id}/deactivate", admin, {})
-req("GET", "/admin/institutions/1/analytics", admin)
 
 req("POST", f"/courses/{c_id}/enrollments/manual", prof, {"user_id": stu2_id, "role": "student"})
 req("POST", f"/courses/{c_id}/staff-members", prof, {"user_id": stu2_id, "role":"ta"})
@@ -228,7 +222,7 @@ if 'c_id' in locals() and c_id:
     req("DELETE", f"/courses/{c_id}/enrollments/me", stu)
     req("DELETE", f"/courses/{c_id}", prof)
 
-if 'inst_id' in locals() and inst_id: req("DELETE", f"/admin/institutions/{inst_id}", admin)
+
 
 print("\n=================================================")
 print(" 🎉 TODOS LOS ENDPOINTS HAN SIDO VERIFICADOS")

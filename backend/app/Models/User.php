@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUuids, SoftDeletes, HasRoles;
+    use HasFactory, Notifiable, HasUuids, SoftDeletes, HasRoles;
 
     protected $fillable = [
         'name',
@@ -22,7 +22,6 @@ class User extends Authenticatable
         'avatar_path',
         'status',
         'xp',
-        'institution_id',
         'email_verified_at',
     ];
 
@@ -34,11 +33,6 @@ class User extends Authenticatable
         'status' => UserStatus::class,
         'email_verified_at' => 'datetime',
     ];
-
-    public function institution()
-    {
-        return $this->belongsTo(Institution::class);
-    }
 
     public function professorApplications()
     {
@@ -100,5 +94,15 @@ class User extends Authenticatable
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }

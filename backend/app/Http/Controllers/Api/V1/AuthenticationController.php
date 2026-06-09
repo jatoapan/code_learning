@@ -25,8 +25,10 @@ class AuthenticationController extends Controller
             'xp' => 0
         ]);
 
+        $token = auth('api')->login($user);
+
         return response()->json([
-            'token' => $user->createToken($request->device_name ?? 'web')->plainTextToken,
+            'token' => $token,
             'user' => $user
         ], 201);
     }
@@ -36,26 +38,23 @@ class AuthenticationController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'device_name' => 'nullable|string'
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $credentials = $request->only('email', 'password');
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $token = auth('api')->attempt($credentials)) {
             return response()->json(['message' => 'Credenciales incorrectas.'], 401);
         }
 
         return response()->json([
-            'token' => $user->createToken($request->device_name ?? 'web')->plainTextToken,
-            'user' => $user
+            'token' => $token,
+            'user' => auth('api')->user()
         ], 200);
     }
 
     public function logout(Request $request)
     {
-        // El usuario revoca el token actual con el que hizo la petición
-        $request->user()->currentAccessToken()->delete();
-        
+        auth('api')->logout();
         return response()->json(['message' => 'Sesión cerrada exitosamente']);
     }
 
