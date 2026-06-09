@@ -52,21 +52,12 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | POST | `/api/v1/sessions` | Public | `{"email":"estudiante@gmail.com", "password":"password123", "device_name":"e2e"}` |
 | POST | `/api/v1/password-reset-links` | Public | `{"email":"admin@prolecom.com"}` |
 | POST | `/api/v1/password-resets` | Public | `{"email":"...", "token":"...", "password":"...", "password_confirmation":"..."}` |
-| DELETE| `/api/v1/sessions/current` | Any Auth | Logout |
+| DELETE| `/api/v1/sessions/current` | Any Auth | Logout (Invalidates JWT) |
 | GET | `/api/v1/user` | Any Auth | Returns current user profile |
 | PUT | `/api/v1/user` | Any Auth | `{"name":"New Name"}` |
 | DELETE| `/api/v1/users/me` | Any Auth | Deactivate own account |
 
-## 3. Institutions (Admin)
-| Method | Path | Roles | Payload / Notes |
-|---|---|---|---|
-| GET | `/api/v1/institutions` | Any Auth | None |
-| POST | `/api/v1/admin/institutions` | Admin | `{"name":"Uni", "slug":"uni", "type":"university"}` |
-| PUT | `/api/v1/admin/institutions/{id}` | Admin | `{"name":"Uni Edit", "type":"university"}` |
-| DELETE| `/api/v1/admin/institutions/{id}` | Admin | None |
-| GET | `/api/v1/admin/institutions/{id}/analytics` | Admin | None |
-
-## 4. Admin & Support Features
+## 3. Admin & Support Features
 | Method | Path | Roles | Payload / Notes |
 |---|---|---|---|
 | GET | `/api/v1/admin/logs` | Admin | Activity logs |
@@ -81,7 +72,7 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | PATCH | `/api/v1/support/users/{id}/deactivate`| Support/Admin | None |
 | PUT | `/api/v1/support/users/{id}/role` | Support/Admin | `{"roles":["student"]}` |
 
-## 5. Professor Applications
+## 4. Professor Applications
 | Method | Path | Roles | Payload / Notes |
 |---|---|---|---|
 | POST | `/api/v1/professor-applications` | Any Auth | `{"motivation":"hire me", "qualifications":"dev"}` |
@@ -90,7 +81,7 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | PATCH | `/api/v1/professor-applications/{id}/assign` | Support/Admin | `{"reviewer_id": 1}` |
 | PATCH | `/api/v1/professor-applications/{id}/review` | Support/Admin | `{"status":"approved"}` |
 
-## 6. Courses & Syllabus
+## 5. Courses & Syllabus
 | Method | Path | Roles | Payload / Notes |
 |---|---|---|---|
 | GET | `/api/v1/courses` | Any Auth | None |
@@ -121,7 +112,7 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | DELETE| `/api/v1/materials/{id}` | Professor/TA | None |
 | POST | `/api/v1/materials/{id}/views` | Any Auth | Record material view |
 
-## 7. Forum Q&A
+## 6. Forum Q&A
 **Note on Accepting Answers**: Accepting a forum post requires you to be the owner of the thread. It is deliberately **NOT** restricted by the `professor` middleware, so students who ask questions can accept answers.
 
 | Method | Path | Roles | Payload / Notes |
@@ -142,7 +133,7 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | PUT | `/api/v1/posts/{id}/votes/me` | Any Auth | `{"value":1}` |
 | PATCH | `/api/v1/posts/{id}/accept` | Any Auth | No payload. (Thread owner only). |
 
-## 8. Moderation & Reports
+## 7. Moderation & Reports
 | Method | Path | Roles | Payload / Notes |
 |---|---|---|---|
 | PATCH | `/api/v1/threads/{id}/pin` | Moderator/Admin | None |
@@ -152,7 +143,7 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | PATCH | `/api/v1/reports/{id}/resolve` | Moderator/Admin | None |
 | PATCH | `/api/v1/reports/{id}/escalate`| Moderator/Admin | None |
 
-## 9. Challenges & IDE
+## 8. Challenges & IDE
 | Method | Path | Roles | Payload / Notes |
 |---|---|---|---|
 | GET | `/api/v1/languages` | Any Auth | List Judge0 languages |
@@ -168,7 +159,7 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | GET | `/api/v1/challenges/{id}/attempts` | Any Auth | List own attempts (or all if Prof) |
 | POST | `/api/v1/challenge-attempts/{id}/feedback` | Professor/TA | `{"feedback":"good"}` |
 
-## 10. Quizzes & Flashcards
+## 9. Quizzes & Flashcards
 | Method | Path | Roles | Payload / Notes |
 |---|---|---|---|
 | POST | `/api/v1/modules/{id}/quizzes` | Professor/TA | `{"title":"Q", "description":"x", "mode":"practice", "time_limit_minutes":10, "passing_score":70}` |
@@ -198,7 +189,7 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | GET | `/api/v1/flashcard-decks/{id}/due-flashcards`| Any Auth | Spaced repetition queue |
 | PATCH | `/api/v1/flashcards/{id}` | Any Auth | `{"quality":4}` (Records review quality 0-5) |
 
-## 11. Notifications
+## 10. Notifications
 | Method | Path | Roles | Payload / Notes |
 |---|---|---|---|
 | GET | `/api/v1/notifications` | Any Auth | List user notifications |

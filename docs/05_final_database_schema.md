@@ -9,9 +9,7 @@ This document outlines the final structure of the 28 core database tables (plus 
 ---
 
 ## 1. Authentication & Users
-- **`users`**: Uses **UUID** (`id`). Contains `name`, `email`, `password`, `xp`, `status`, `institution_id`.
-- **`institutions`**: Auto-increment `id`. Contains `name`, `slug`, `domain`, `type`, `logo_path`.
-- **`personal_access_tokens`**: Sanctum token table.
+- **`users`**: Uses **UUID** (`id`). Contains `name`, `email`, `password`, `xp`, `status`.
 - **Spatie Permission Tables**: `permissions`, `roles`, `model_has_permissions`, `model_has_roles`, `role_has_permissions`. 
 - **`professor_applications`**: Auto-increment `id`. Contains `user_id`, `motivation`, `qualifications`, `status`, `reviewer_id`.
 
