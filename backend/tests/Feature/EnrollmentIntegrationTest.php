@@ -38,7 +38,7 @@ class EnrollmentIntegrationTest extends TestCase
             'category' => 'programming',
             'level' => 'advanced',
             'status' => 'public',
-            'creator_id' => $professor->id
+            'owner_id' => $professor->id
         ]);
 
         $response = $this->actingAs($student, 'api')->postJson("/api/v1/courses/{$course->id}/enrollments");
@@ -71,7 +71,7 @@ class EnrollmentIntegrationTest extends TestCase
             'category' => 'programming',
             'level' => 'intermediate',
             'status' => 'public',
-            'creator_id' => $professor->id
+            'owner_id' => $professor->id
         ]);
 
         // Primera matrícula

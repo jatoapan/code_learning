@@ -137,14 +137,13 @@ if c_id:
         req("PUT", f"/modules/{m_id}", prof, {"title":"M1 Edit"})
         req("PATCH", f"/modules/{m_id}/items-order", prof, {"items":[{"id":1, "type":"material", "order":1}]})
         
-        mat_res = req("POST", f"/modules/{m_id}/materials", prof, {"title":"Mat", "type":"video_link", "content":"https://youtube.com/watch?v=123"})
+        mat_res = req("POST", f"/modules/{m_id}/materials", prof, {"title":"Mat", "type":"video_link", "content":BASE_URL + "/health"})
         mat_id = mat_res.get("data", {}).get("id", "")
         if mat_id:
             req("PUT", f"/materials/{mat_id}", prof, {"title":"Mat Edit", "type":"video_link"})
             req("GET", f"/materials/{mat_id}", stu)
             req("POST", f"/materials/{mat_id}/views", stu, {})
             print("   [!] Probando Material")
-            req("GET", f"/materials/{mat_id}/download", "")
             req("GET", f"/materials/{mat_id}/download", stu)
 
 print("\n--- FORUMS ---")
