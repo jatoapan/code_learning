@@ -23,9 +23,14 @@ class ChallengeController extends Controller
         return response()->json(['data' => $challenges]);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $challenge = Challenge::with('testCases')->findOrFail($id);
+        $challenge = Challenge::with('testCases', 'module.course')->findOrFail($id);
+        
+        if (!\Illuminate\Support\Facades\Gate::allows('update', $challenge->module->course)) {
+            $challenge->setRelation('testCases', $challenge->testCases->where('is_hidden', false)->values());
+        }
+
         return response()->json(['data' => $challenge]);
     }
 
