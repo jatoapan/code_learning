@@ -10,7 +10,7 @@ class StoreFlashcardRequest extends FormRequest
     public function authorize()
     {
         $deck = FlashcardDeck::findOrFail($this->route('id'));
-        return $this->user()->can('update', $deck->module->course) || $this->user()->hasRole('admin');
+        return $deck->user_id === $this->user()->id || $this->user()->hasRole('admin');
     }
 
     public function rules()

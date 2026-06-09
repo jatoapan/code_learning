@@ -100,6 +100,21 @@ if app_id:
     req("GET", "/professor-applications", admin)
     req("PATCH", f"/professor-applications/{app_id}/review", admin, {"status":"approved"})
 
+c_id = None
+m_id = None
+mat_id = None
+th_id = None
+p_id = None
+rep_id = None
+qz_id = None
+qq_id = None
+qa_id = None
+dk_id = None
+fc_id = None
+ch_id = None
+ca_id = None
+tc_id = None
+
 print("\n--- COURSES & SYLLABUS ---")
 c_res = req("POST", "/courses", prof, {"title":"C1", "description":"x", "status":"public", "category":"programming"})
 c_id = c_res.get("data", {}).get("id", "")

@@ -9,7 +9,7 @@ class UpdateFlashcardDeckRequest extends FormRequest
 {
     public function authorize()
     {
-        $deck = FlashcardDeck::findOrFail($this->route('id'));
+        $deck = FlashcardDeck::findOrFail($this->route('flashcard_deck'));
         return $deck->user_id === $this->user()->id || $this->user()->hasRole('admin');
     }
 
