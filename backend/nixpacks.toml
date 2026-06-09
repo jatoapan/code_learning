@@ -16,4 +16,4 @@
     nixPkgs = ["...", "php83Extensions.redis", "php83Extensions.pdo_mysql"]
 
 [phases.build]
-    cmds = ["composer install --no-dev --optimize-autoloader", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache", "php artisan storage:link", "php artisan test || true", "php artisan tinker --execute=\"echo PHP_EOL.'[RAILWAY_AUTODIAGNOSTICO] 🚀 SISTEMA ESTABLE: Modelo User cargado exitosamente -> ' . get_class(new \App\Models\User) . PHP_EOL;\""]
+    cmds = ["composer install --no-dev --optimize-autoloader", "php artisan config:cache", "php artisan route:cache", "php artisan view:cache", "php artisan storage:link"]

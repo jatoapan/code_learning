@@ -12,7 +12,7 @@ services:
     tty: true
     working_dir: /var/www
     ports:
-      - "8000:80"
+      - "8080:8080"
     volumes:
       - ./:/var/www
     networks:
