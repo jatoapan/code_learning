@@ -18,8 +18,9 @@ class UserModelTest extends TestCase
     {
         $user = User::factory()->create();
         
-        $this->assertIsString($user->id);
-        $this->assertEquals(36, strlen($user->id)); // UUID v4 length
+        $uuidStr = (string) $user->id;
+        $this->assertIsString($uuidStr);
+        $this->assertEquals(36, strlen($uuidStr)); // UUID v4 length
     }
 
     /**
