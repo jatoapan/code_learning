@@ -36,6 +36,7 @@ class ChallengeHiddenTestCasesTest extends TestCase
             'id' => Str::uuid(),
             'title' => 'Python 101',
             'description' => 'Desc',
+            'category' => 'programming',
             'level' => 'beginner',
             'status' => 'public',
             'creator_id' => $professor->id

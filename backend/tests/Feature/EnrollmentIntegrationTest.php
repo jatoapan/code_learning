@@ -34,6 +34,7 @@ class EnrollmentIntegrationTest extends TestCase
             'id' => Str::uuid(),
             'title' => 'Advanced Algorithms',
             'description' => 'Course description',
+            'category' => 'programming',
             'level' => 'advanced',
             'status' => 'public',
             'creator_id' => $professor->id
@@ -65,6 +66,7 @@ class EnrollmentIntegrationTest extends TestCase
             'id' => Str::uuid(),
             'title' => 'Data Structures',
             'description' => 'Course description',
+            'category' => 'programming',
             'level' => 'intermediate',
             'status' => 'public',
             'creator_id' => $professor->id
