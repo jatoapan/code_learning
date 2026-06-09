@@ -37,7 +37,7 @@ class ChallengeHiddenTestCasesTest extends TestCase
             'title' => 'Python 101',
             'description' => 'Desc',
             'level' => 'beginner',
-            'status' => 'published',
+            'status' => 'public',
             'creator_id' => $professor->id
         ]);
 

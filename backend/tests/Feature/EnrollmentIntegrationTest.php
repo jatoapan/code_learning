@@ -35,7 +35,7 @@ class EnrollmentIntegrationTest extends TestCase
             'title' => 'Advanced Algorithms',
             'description' => 'Course description',
             'level' => 'advanced',
-            'status' => 'published',
+            'status' => 'public',
             'creator_id' => $professor->id
         ]);
 
@@ -66,7 +66,7 @@ class EnrollmentIntegrationTest extends TestCase
             'title' => 'Data Structures',
             'description' => 'Course description',
             'level' => 'intermediate',
-            'status' => 'published',
+            'status' => 'public',
             'creator_id' => $professor->id
         ]);
 
