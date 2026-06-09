@@ -17,6 +17,7 @@ class FlashcardController extends Controller
         ]);
 
         $deck = FlashcardDeck::findOrFail($deckId);
+        if ($deck->user_id !== $request->user()->id && !$request->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
 
         $flashcard = new Flashcard();
         $flashcard->deck_id = $deck->id;
@@ -30,6 +31,8 @@ class FlashcardController extends Controller
     public function update(Request $request, $id)
     {
         $flashcard = Flashcard::findOrFail($id);
+        if ($flashcard->deck->user_id !== $request->user()->id && !$request->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
+        
         $validated = $request->validate([
             'question_text' => 'sometimes|required|string',
             'answer_text' => 'sometimes|required|string',
@@ -41,6 +44,8 @@ class FlashcardController extends Controller
     public function destroy($id)
     {
         $flashcard = Flashcard::findOrFail($id);
+        if ($flashcard->deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
+        
         $flashcard->delete();
         return response()->json(['message' => 'Flashcard deleted successfully']);
     }
@@ -69,6 +74,7 @@ class FlashcardController extends Controller
     public function due(Request $request, $deckId)
     {
         $deck = \App\Models\FlashcardDeck::findOrFail($deckId);
+        if ($deck->user_id !== $request->user()->id && !$request->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
         
         $flashcards = Flashcard::where('deck_id', $deck->id)
             ->where(function ($query) {
@@ -83,6 +89,8 @@ class FlashcardController extends Controller
     public function review(Request $request, $id)
     {
         $flashcard = Flashcard::findOrFail($id);
+        if ($flashcard->deck->user_id !== $request->user()->id && !$request->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
+        
         $validated = $request->validate([
             'quality' => 'required|integer|min:0|max:5',
         ]);

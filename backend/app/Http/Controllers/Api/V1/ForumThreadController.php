@@ -113,6 +113,9 @@ class ForumThreadController extends Controller
     public function togglePin(Request $request, $id)
     {
         $thread = ForumThread::findOrFail($id);
+        if (!$request->user()->hasRole('admin|moderator|professor|ta')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
         $thread->is_pinned = !$thread->is_pinned;
         $thread->save();
         return response()->json(['message' => 'Thread pin toggled', 'data' => $thread]);
@@ -121,6 +124,9 @@ class ForumThreadController extends Controller
     public function lock(Request $request, $id)
     {
         $thread = ForumThread::findOrFail($id);
+        if (!$request->user()->hasRole('admin|moderator|professor|ta')) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
         $thread->status = ThreadStatus::Locked->value;
         $thread->save();
         return response()->json(['message' => 'Thread locked', 'data' => $thread]);

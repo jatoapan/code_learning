@@ -43,12 +43,16 @@ class FlashcardDeckController extends Controller
 
     public function show($id)
     {
-        return response()->json(['data' => FlashcardDeck::findOrFail($id)]);
+        $deck = FlashcardDeck::findOrFail($id);
+        if ($deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
+        return response()->json(['data' => $deck]);
     }
 
     public function update(Request $request, $id)
     {
         $deck = FlashcardDeck::findOrFail($id);
+        if ($deck->user_id !== $request->user()->id && !$request->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
+        
         $validated = $request->validate([
             'title' => 'string|max:255',
             'description' => 'nullable|string',
@@ -60,6 +64,8 @@ class FlashcardDeckController extends Controller
     public function destroy($id)
     {
         $deck = FlashcardDeck::findOrFail($id);
+        if ($deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
+        
         $deck->delete();
         return response()->json(['message' => 'Deleted successfully']);
     }
