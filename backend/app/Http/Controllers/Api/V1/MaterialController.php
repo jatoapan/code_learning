@@ -32,10 +32,11 @@ class MaterialController extends Controller
         $material->title = $validated['title'];
         $material->type = $validated['type'];
         
-        // Logica Hibrida: Si envian el archivo pesado, lo guardamos. Si envian un link, usamos el link.
+        // Lógica de Alta Seguridad (Bóveda Privada):
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('materials', 'public');
-            $material->file_path = '/storage/' . $path;
+            // Guardamos el archivo en el disco 'local' (protegido, sin acceso a internet)
+            $path = $request->file('file')->store('materials', 'local');
+            $material->file_path = $path; // Guardamos solo el ID interno
         } else {
             $material->file_path = $validated['content'] ?? '';
         }
@@ -80,5 +81,26 @@ class MaterialController extends Controller
     public function recordView(Request $request, $id)
     {
         return response()->json(['message' => 'Material view recorded']);
+    }
+
+    /**
+     * Secure Document Viewer Endpoint
+     */
+    public function download($id)
+    {
+        $material = Material::findOrFail($id);
+        
+        // Si es un link externo (ej. Youtube), redirigimos de forma transparente
+        if ($material->type === 'video_link' || str_starts_with($material->file_path, 'http')) {
+            return redirect($material->file_path);
+        }
+
+        // Si es un PDF o Video pesado de nuestra bóveda, comprobamos su existencia
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($material->file_path)) {
+            return response()->json(['message' => 'Archivo protegido no encontrado'], 404);
+        }
+
+        // Transmisión Segura (Streaming): Solo el usuario con JWT llega hasta aquí
+        return \Illuminate\Support\Facades\Storage::disk('local')->download($material->file_path, $material->title);
     }
 }

@@ -45,6 +45,7 @@ Route::prefix('v1')->group(function () {
         
         // 4.6 Syllabus (Materials & Modules)
         Route::get('/materials/{id}', [\App\Http\Controllers\Api\V1\MaterialController::class, 'show']);
+        Route::get('/materials/{id}/download', [\App\Http\Controllers\Api\V1\MaterialController::class, 'download']); // Visor seguro
         Route::post('/materials/{id}/views', [\App\Http\Controllers\Api\V1\MaterialController::class, 'recordView']);
         
         // 4.7 Notifications
