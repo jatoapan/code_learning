@@ -20,5 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, $request) {
+            return response()->json([
+                'message' => 'No tienes los permisos o roles necesarios para realizar esta acción.',
+                'error' => $e->getMessage(),
+            ], 403);
+        });
     })->create();
