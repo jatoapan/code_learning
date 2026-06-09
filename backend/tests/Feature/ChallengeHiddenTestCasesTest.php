@@ -35,6 +35,7 @@ class ChallengeHiddenTestCasesTest extends TestCase
         $course = Course::create([
             'id' => Str::uuid(),
             'title' => 'Python 101',
+            'slug' => 'python-101',
             'description' => 'Desc',
             'category' => 'programming',
             'level' => 'beginner',

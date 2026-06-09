@@ -33,6 +33,7 @@ class EnrollmentIntegrationTest extends TestCase
         $course = Course::create([
             'id' => Str::uuid(),
             'title' => 'Advanced Algorithms',
+            'slug' => 'advanced-algorithms',
             'description' => 'Course description',
             'category' => 'programming',
             'level' => 'advanced',
@@ -65,6 +66,7 @@ class EnrollmentIntegrationTest extends TestCase
         $course = Course::create([
             'id' => Str::uuid(),
             'title' => 'Data Structures',
+            'slug' => 'data-structures',
             'description' => 'Course description',
             'category' => 'programming',
             'level' => 'intermediate',
