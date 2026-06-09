@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
+Route::prefix('v1')->middleware('throttle:1000,1')->group(function () {
     Route::get('/health', function () { return response()->json(['status' => 'ok']); });
     Route::get('/ping-deploy', function () { 
         return response()->json([
@@ -77,7 +77,7 @@ Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
         // 4.9 Challenges & IDE
         Route::get('/languages', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'languages']);
         Route::get('/challenges/{id}', [\App\Http\Controllers\Api\V1\ChallengeController::class, 'show']);
-        Route::post('/challenges/{id}/attempts', [\App\Http\Controllers\Api\V1\ChallengeAttemptController::class, 'submit'])->middleware('throttle:10,1');
+        Route::post('/challenges/{id}/attempts', [\App\Http\Controllers\Api\V1\ChallengeAttemptController::class, 'submit'])->middleware('throttle:1000,1');
         Route::get('/challenges/{id}/attempts', [\App\Http\Controllers\Api\V1\ChallengeAttemptController::class, 'index']);
 
         // 4.10 Quizzes & Flashcards
