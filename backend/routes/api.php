@@ -12,15 +12,12 @@ Route::prefix('v1')->group(function () {
     });
 
     // BOTON NUCLEAR TEMPORAL: Resetea y siembra la DB sin ir a la consola
-    Route::get('/dev-reset-db', function () {
-        \Illuminate\Support\Facades\Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
-        return response()->json(['message' => 'Base de datos destruida y re-sembrada exitosamente con roles y UUIDs.']);
-    });
+    // Dev DB Reset Endpoint removed for security. Use artisan commands instead.
 
     // 4.1 Auth
-    Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register']);
+    Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register'])->middleware('throttle:10,1');
     Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'login'])->middleware('throttle:5,1');
-    Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'sendResetLink']);
+    Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'sendResetLink'])->middleware('throttle:5,1');
     Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword'])->middleware('throttle:5,1');
     
     // Rutas protegidas

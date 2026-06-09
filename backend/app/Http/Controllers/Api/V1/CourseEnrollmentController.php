@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseUser;
+use App\Models\CourseUser;
 use Illuminate\Http\Request;
 use App\Enums\EnrollmentStatus;
+use Illuminate\Support\Facades\Gate;
 
 class CourseEnrollmentController extends Controller
 {
@@ -42,6 +44,7 @@ class CourseEnrollmentController extends Controller
         ]);
 
         $course = Course::findOrFail($id);
+        Gate::authorize('update', $course);
 
         $pivot = CourseUser::updateOrCreate(
             ['course_id' => $course->id, 'user_id' => $validated['user_id']],
