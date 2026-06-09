@@ -25,7 +25,7 @@ class UserController extends Controller
     public function deactivate(Request $request)
     {
         $request->user()->update(['status' => \App\Enums\UserStatus::Deactivated]);
-        $request->user()->tokens()->delete(); // Cierra todas las sesiones activas
+        auth('api')->logout(); // Invalida el token JWT en lugar de Sanctum
         
         return response()->json(['message' => 'Cuenta desactivada permanentemente']);
     }
