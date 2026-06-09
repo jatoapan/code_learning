@@ -1,62 +1,44 @@
-# Prolecom Database Schema
+# Prolecom Database Schema (Final)
 
-This document outlines the final structure of the 28 core database tables (plus Spatie permission tables) powering the Prolecom MVP.
+La base de datos utiliza PostgreSQL y está diseñada respetando `UUIDs` para todas las tablas transaccionales mayores y relaciones polimórficas donde aplique.
 
-## Primary Keys & IDs
-- **UUIDs**: Are used for entities that might be exposed publicly or require decoupled generation (e.g. `users`, `courses`, `challenges`, `challenge_attempts`, `forum_threads`, `forum_posts`, `notifications`). 
-- **Auto-increment Integers**: Used for internal relationships and smaller entities (e.g., `institutions`, `modules`, `materials`, `quizzes`, `flashcards`, etc.).
+## Autenticación y Autorización
+- **users**: `id (UUID)`, `name`, `email`, `password`, `is_active`, `last_login_at`.
+- **roles** / **permissions** / **model_has_roles** (Spatie Laravel-Permission).
 
----
+## Core (Cursos y Sílabo)
+- **institutions**: `id (Int)`, `name`, `domain_pattern`, `settings`.
+- **courses**: `id (UUID)`, `title`, `slug`, `description`, `status (Enum: draft, public, unlisted)`, `category (Enum)`, `has_leaderboard`, `owner_id (UUID)`. SoftDeletes habilitado.
+- **course_user** (Pivot): `course_id`, `user_id`, `role (student, ta)`, `status`, `xp`, `progress_percent`.
+- **modules**: `id (Int)`, `course_id (UUID)`, `title`, `order`.
+- **materials**: `id (Int)`, `title`, `type (Enum: pdf, video_link, ppt, pptx)`, `content`, `file_path`.
+- **module_items** (Polimórfica Inversa para ordenar Syllabus): `id (Int)`, `module_id`, `itemable_id`, `itemable_type`, `order`. Sirve para entremezclar materiales, retos y quizzes.
+- **material_views**: `material_id`, `user_id`, `viewed_at`.
 
-## 1. Authentication & Users
-- **`users`**: Uses **UUID** (`id`). Contains `name`, `email`, `password`, `xp`, `status`.
-- **Spatie Permission Tables**: `permissions`, `roles`, `model_has_permissions`, `model_has_roles`, `role_has_permissions`. 
-- **`professor_applications`**: Auto-increment `id`. Contains `user_id`, `motivation`, `qualifications`, `status`, `reviewer_id`.
+## Foros y Q&A
+- **forum_threads**: `id (UUID)`, `title`, `body`, `user_id`, `forumable_id`, `forumable_type` (Puede pertenecer a Course, Module o Challenge), `is_pinned`, `is_locked`, `votes_sum`.
+- **forum_posts**: `id (UUID)`, `forum_thread_id`, `user_id`, `body`, `is_accepted`, `votes_sum`.
+- **votes** (Polimórfica): `user_id`, `votable_id`, `votable_type`, `value (+1, -1)`. Protegido contra manipulación cruzada por Gate::authorize sobre el elemento padre.
 
-## 2. Courses & Syllabus
-- **`courses`**: Uses **UUID** (`id`). Contains `category`, `title`, `slug`, `description`, `status`, `owner_id`.
-- **`course_user`**: Auto-increment `id`. Pivot table tracking enrollments. Contains `course_id`, `user_id`, `role`, `status`, `xp`, `progress_percent`.
-- **`modules`**: Auto-increment `id`. Contains `course_id`, `title`, `description`, `order`, `prerequisite_module_id`.
-- **`materials`**: Auto-increment `id`. Contains `title`, `type`, `file_path`, `creator_id`, `moderator_endorsed_at`.
-- **`material_user`**: Auto-increment `id`. Tracks viewed materials per user.
-- **`module_items`**: Auto-increment `id`. Polymorphic junction to track the exact order of materials, quizzes, and challenges inside a module.
+## Gamificación e IDE
+- **challenges**: `id (UUID)`, `title`, `description`, `difficulty (Enum)`, `points`, `language_id`, `language_name`.
+- **challenge_test_cases**: `id (Int)`, `challenge_id`, `input_data`, `expected_output`, `is_hidden`.
+- **challenge_attempts**: `id (UUID)`, `challenge_id`, `user_id`, `submitted_code`, `language_id`, `status (Enum: passed, failed, error)`, `score`, `execution_time_ms`, `feedback`.
+- **quizzes**: `id (Int)`, `title`, `mode (Enum: practice, exam)`, `time_limit_minutes`, `passing_score`.
+- **quiz_questions**: `id (Int)`, `quiz_id`, `type (Enum: multiple_choice, true_false)`, `question_text`, `options (JSON)`, `correct_answer`, `points`.
+- **quiz_attempts**: `id (UUID)`, `quiz_id`, `user_id`, `score`, `passed`.
+- **flashcard_decks**: `id (Int)`, `title`, `user_id`, `module_id`.
+- **flashcards**: `id (Int)`, `flashcard_deck_id`, `question_text`, `answer_text`, `easiness_factor`, `interval`, `repetitions`, `next_review_at` (Algoritmo SuperMemo 2).
 
-## 3. Forum Q&A
-- **`forum_threads`**: Uses **UUID** (`id`).
-  - **Polymorphic Relationship**: Uses `forumable_type` and `forumable_id` (string 36 to support UUIDs) to attach to Courses, Modules, or Challenges.
-  - Contains `title`, `body`, `user_id`, `status`, `is_pinned`, `vote_score`, `moderator_endorsed_at`.
-- **`forum_posts`**: Uses **UUID** (`id`). Contains `thread_id`, `parent_id`, `body`, `user_id`, `is_accepted_answer`, `vote_score`, `moderator_endorsed_at`.
-- **`votes`**: Auto-increment `id`.
-  - **Polymorphic Relationship**: Uses `votable_type` and `votable_id` (uuid) to vote on Threads or Posts.
-  - Contains `user_id`, `vote_type` (+1, -1).
+## Administración y Sistema
+- **reports** (Polimórfica): `id (Int)`, `reporter_id`, `reportable_id`, `reportable_type`, `reason`, `status (Enum: pending, resolved, dismissed, escalated)`.
+- **professor_applications**: `id (Int)`, `applicant_id`, `status (pending, approved, rejected)`, `qualifications`, `reviewer_id`.
+- **admin_logs**: `id (Int)`, `admin_id`, `action`, `details (JSON)`.
+- **system_settings**: `key (String PK)`, `value`, `type`.
+- **response_templates**: `id (Int)`, `title`, `body`.
+- **notifications**: Core table generada por Laravel Database Notifications (`id (UUID)`, `type`, `notifiable`, `data (JSON)`).
 
-## 4. Quizzes & Flashcards
-- **`quizzes`**: Auto-increment `id`. Contains `title`, `time_limit`, `passing_score`, `mode`, `status`.
-- **`quiz_questions`**: Auto-increment `id`. Contains `quiz_id`, `question_text`, `type`, `points`.
-- **`quiz_answers`**: Auto-increment `id`. Options for questions.
-- **`quiz_attempts`**: Auto-increment `id`. Tracks student attempts, `user_id`, `quiz_id`, `score`, `status`.
-- **`quiz_attempt_answers`**: Auto-increment `id`. Tracks individual answers given in an attempt.
-- **`flashcard_decks`**: Auto-increment `id`. Contains `user_id`, `title`, `description`.
-- **`flashcards`**: Auto-increment `id`. Contains `deck_id`, `question_text`, `answer_text`, and spaced repetition fields (e.g. `interval`, `ease_factor`).
-
-## 5. Challenges & IDE (Gamification)
-- **`challenges`**: Uses **UUID** (`id`). Contains `module_id`, `title`, `difficulty`, `language_id`, `language_name`, `starter_code`, `points`, `creator_id`.
-- **`challenge_test_cases`**: Auto-increment `id`. Contains `challenge_id`, `input_data`, `expected_output`, `is_hidden`.
-- **`challenge_attempts`**: Uses **UUID** (`id`). Contains `challenge_id`, `user_id`, `submitted_code`, `status`, `execution_time_ms`, `score`.
-
-## 6. Moderation, Reports & System
-- **`reports`**: Auto-increment `id`.
-  - **Polymorphic Relationship**: Uses `reportable_type` and `reportable_id` (uuid) to report Threads, Posts, or Users.
-  - Contains `reporter_id`, `reason`, `status`, `resolved_by`.
-- **`response_templates`**: Auto-increment `id`. Canned responses for moderators/support.
-- **`activity_logs`**: Auto-increment `id`. Spatie Activitylog table. Tracks system-wide events polymorphically.
-- **`system_settings`**: Auto-increment `id`. Key-value store for global settings (`key`, `value`, `type`).
-- **`notifications`**: Uses **UUID** (`id`).
-  - **Polymorphic Relationship**: Uses `notifiable_type` and `notifiable_id` via `$table->morphs('notifiable')` to track who receives the notification.
-  - Contains `type`, `data`, `read_at`.
-
-*(Note: The Endorsements table was removed. Endorsement tracking is handled via `moderator_endorsed_at` timestamps on Materials, Threads, and Posts.)*
-
-## 7. Caching & Infrastructure Notes
-- **Idempotency Keys**: Handled completely in-memory (Cache/Redis) by the custom `Idempotency` middleware. No SQL table is used for this to ensure maximum speed (sub-15ms response times). Responses are cached for 24 hours based on the `Idempotency-Key` header.
-- **Rate Limiting**: Throttling counters (e.g., 5 req/min for Auth, 10 req/min for Judge0) are also managed directly in the Application Cache, completely bypassing the SQL Database for optimal performance.
+## Notas de Seguridad de Base de Datos
+- Las operaciones transaccionales aseguran que un `CourseEnrollment` con `status: public` rechace BOLA si alguien intenta asignar otro `user_id` en peticiones manuales no autorizadas.
+- La tabla de `votes` delega su permiso de `view` al `Course` originario a través del ancestro.
+- La eliminación de foros, hilos y cursos se maneja con Cascade On Delete en la capa de la base de datos o SoftDeletes en Eloquent, según corresponda en las migraciones nativas.
