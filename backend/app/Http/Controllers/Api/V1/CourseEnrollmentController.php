@@ -15,10 +15,17 @@ class CourseEnrollmentController extends Controller
     {
         $course = Course::findOrFail($id);
         
-        $pivot = CourseUser::updateOrCreate(
-            ['course_id' => $course->id, 'user_id' => $request->user()->id],
-            ['role' => 'student', 'status' => EnrollmentStatus::Enrolled->value]
-        );
+        $exists = CourseUser::where('course_id', $course->id)->where('user_id', $request->user()->id)->exists();
+        if ($exists) {
+            return response()->json(['message' => 'Already enrolled'], 409);
+        }
+
+        $pivot = CourseUser::create([
+            'course_id' => $course->id,
+            'user_id' => $request->user()->id,
+            'role' => 'student',
+            'status' => EnrollmentStatus::Enrolled->value
+        ]);
 
         return response()->json(['message' => 'Successfully enrolled', 'data' => $pivot], 201);
     }

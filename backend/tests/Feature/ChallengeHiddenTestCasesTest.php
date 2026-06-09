@@ -57,7 +57,9 @@ class ChallengeHiddenTestCasesTest extends TestCase
             'title' => 'Sum two numbers',
             'description' => 'Return the sum',
             'difficulty' => 'easy',
-            'points' => 10
+            'points' => 10,
+            'language_id' => 71,
+            'language_name' => 'Python'
         ]);
 
         // Caso Público
