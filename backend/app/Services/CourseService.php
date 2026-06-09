@@ -61,4 +61,45 @@ class CourseService
             );
         });
     }
+    public function updateCourse(Course $course, array $data): Course {
+        if (isset($data['title'])) {
+            $course->slug = Str::slug($data['title']) . '-' . uniqid();
+        }
+        $course->update($data);
+        return $course;
+    }
+
+    public function deleteCourse(Course $course): void {
+        $course->delete();
+    }
+
+    public function getProgress(Course $course, string $userId): int {
+        $pivot = CourseUser::where('course_id', $course->id)->where('user_id', $userId)->first();
+        return $pivot ? $pivot->progress_percent : 0;
+    }
+
+    public function getLeaderboard(Course $course) {
+        return CourseUser::with('user:id,name,avatar_path')
+            ->where('course_id', $course->id)
+            ->where('role', 'student')
+            ->orderBy('xp', 'desc')
+            ->limit(50)
+            ->get();
+    }
+
+    public function getStats(Course $course): array {
+        $totalStudents = CourseUser::where('course_id', $course->id)->where('role', 'student')->count();
+        return ['total_students' => $totalStudents];
+    }
+
+    public function addStaff(Course $course, array $data): CourseUser {
+        return CourseUser::firstOrCreate(
+            ['course_id' => $course->id, 'user_id' => $data['user_id']],
+            ['role' => $data['role'], 'status' => 'enrolled']
+        );
+    }
+
+    public function removeStaff(Course $course, string $userId): void {
+        CourseUser::where('course_id', $course->id)->where('user_id', $userId)->delete();
+    }
 }
