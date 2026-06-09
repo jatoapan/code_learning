@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Institution;
 use App\Models\User;
 use App\Models\Course;
 use App\Models\Module;
@@ -24,28 +22,12 @@ class DatabaseSeeder extends Seeder
             \Spatie\Permission\Models\Role::firstOrCreate(['name' => $role]);
         }
 
-        // 1. Crear Instituciones
-        $espol = Institution::create([
-            'name' => 'ESPOL',
-            'slug' => 'espol',
-            'domain' => 'espol.edu.ec',
-            'type' => 'university'
-        ]);
-
-        $bootcamp = Institution::create([
-            'name' => 'ITConsultore Bootcamp',
-            'slug' => 'itconsultore',
-            'domain' => 'itconsultore.com',
-            'type' => 'bootcamp'
-        ]);
-
         // 2. Crear Usuarios de Prueba
         $admin = User::create([
             'name' => 'Administrador Global',
             'email' => 'admin@prolecom.com',
             'password' => Hash::make('password123'),
             'status' => 'active',
-            'institution_id' => $bootcamp->id,
             'xp' => 1000
         ]);
         $admin->assignRole('admin');
@@ -55,7 +37,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'profesor@espol.edu.ec',
             'password' => Hash::make('password123'),
             'status' => 'active',
-            'institution_id' => $espol->id,
             'xp' => 500
         ]);
         $profesor->assignRole('professor');
@@ -65,7 +46,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'estudiante@gmail.com',
             'password' => Hash::make('password123'),
             'status' => 'active',
-            'institution_id' => null,
             'xp' => 0
         ]);
         $estudiante->assignRole('student');
