@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -14,51 +13,38 @@ use Illuminate\Http\Request;
 
 class FlashcardController extends Controller
 {
-    protected $gamificationService;
+    public function __construct(private GamificationService $gamificationService) {}
 
-    public function __construct(GamificationService $gamificationService)
-    {
-        $this->gamificationService = $gamificationService;
-    }
-
-    public function store(StoreFlashcardRequest $request, $deckId)
-    {
+    public function store(StoreFlashcardRequest $request, $deckId) {
         $deck = FlashcardDeck::findOrFail($deckId);
-        $flashcard = $this->gamificationService->createFlashcard($deck, $request->validated());
-
-        return response()->json(['message' => 'Flashcard added successfully', 'data' => $flashcard], 201);
+        if ($deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403);
+        return response()->json(['data' => $this->gamificationService->createFlashcard($deck, $request->validated())], 201);
     }
 
-    public function update(UpdateFlashcardRequest $request, $id)
-    {
-        $flashcard = Flashcard::findOrFail($id);
-        $flashcard = $this->gamificationService->updateFlashcard($flashcard, $request->validated());
-
-        return response()->json(['message' => 'Flashcard updated successfully', 'data' => $flashcard]);
+    public function update(UpdateFlashcardRequest $request, $id) {
+        $flashcard = Flashcard::with('deck')->findOrFail($id);
+        if ($flashcard->deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403);
+        return response()->json(['data' => $this->gamificationService->updateFlashcard($flashcard, $request->validated())]);
     }
 
-    public function destroy($id)
-    {
-        $flashcard = Flashcard::findOrFail($id);
-        if ($flashcard->deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
-        
+    public function destroy($id) {
+        $flashcard = Flashcard::with('deck')->findOrFail($id);
+        if ($flashcard->deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403);
         $this->gamificationService->deleteFlashcard($flashcard);
-        return response()->json(['message' => 'Flashcard deleted successfully']);
+        return response()->json(['message' => 'Deleted']);
     }
 
-    public function importFromQuiz(ImportFlashcardsFromQuizRequest $request)
-    {
+    public function importFromQuiz(ImportFlashcardsFromQuizRequest $request) {
         $validated = $request->validated();
         $deck = FlashcardDeck::findOrFail($validated['deck_id']);
+        if ($deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403);
         $this->gamificationService->importFlashcardsFromQuiz($deck, $validated['quiz_id']);
-
         return response()->json(['message' => 'Imported successfully']);
     }
 
-    public function due(Request $request, $deckId)
-    {
+    public function due(Request $request, $deckId) {
         $deck = FlashcardDeck::findOrFail($deckId);
-        if ($deck->user_id !== $request->user()->id && !$request->user()->hasRole('admin')) { abort(403, 'Unauthorized'); }
+        if ($deck->user_id !== $request->user()->id && !$request->user()->hasRole('admin')) abort(403);
         
         $flashcards = Flashcard::where('deck_id', $deck->id)
             ->where(function ($query) {
@@ -66,16 +52,13 @@ class FlashcardController extends Controller
                       ->orWhere('next_review_at', '<=', now());
             })
             ->get();
-            
         return response()->json(['data' => $flashcards]);
     }
 
-    public function review(ReviewFlashcardRequest $request, $id)
-    {
-        $flashcard = Flashcard::findOrFail($id);
-        $validated = $request->validated();
-        $this->gamificationService->reviewFlashcard($flashcard, $validated['quality']);
-
-        return response()->json(['message' => 'Review recorded successfully']);
+    public function review(ReviewFlashcardRequest $request, $id) {
+        $flashcard = Flashcard::with('deck')->findOrFail($id);
+        if ($flashcard->deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403);
+        $this->gamificationService->reviewFlashcard($flashcard, $request->validated()['quality']);
+        return response()->json(['message' => 'Review recorded']);
     }
 }

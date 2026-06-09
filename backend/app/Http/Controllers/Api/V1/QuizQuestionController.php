@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -13,49 +12,40 @@ use Illuminate\Support\Facades\Gate;
 
 class QuizQuestionController extends Controller
 {
-    protected $gamificationService;
+    public function __construct(private GamificationService $gamificationService) {}
 
-    public function __construct(GamificationService $gamificationService)
-    {
-        $this->gamificationService = $gamificationService;
+    private function getCourseFromQuiz(Quiz $quiz) {
+        $item = $quiz->moduleItems()->with('module.course')->first();
+        return $item ? $item->module->course : null;
     }
 
-    public function store(StoreQuizQuestionRequest $request, $quizId)
-    {
+    public function store(StoreQuizQuestionRequest $request, $quizId) {
         $quiz = Quiz::findOrFail($quizId);
-        $question = $this->gamificationService->createQuizQuestion($quiz, $request->validated());
-
-        return response()->json(['message' => 'Question added successfully', 'data' => $question], 201);
+        $course = $this->getCourseFromQuiz($quiz);
+        if ($course) Gate::authorize('update', $course);
+        return response()->json(['data' => $this->gamificationService->createQuizQuestion($quiz, $request->validated())], 201);
     }
 
-    public function update(UpdateQuizQuestionRequest $request, $id)
-    {
-        $question = QuizQuestion::findOrFail($id);
-        $question = $this->gamificationService->updateQuizQuestion($question, $request->validated());
-        
-        return response()->json(['message' => 'Question updated successfully', 'data' => $question]);
+    public function update(UpdateQuizQuestionRequest $request, $id) {
+        $question = QuizQuestion::with('quiz')->findOrFail($id);
+        $course = $this->getCourseFromQuiz($question->quiz);
+        if ($course) Gate::authorize('update', $course);
+        return response()->json(['data' => $this->gamificationService->updateQuizQuestion($question, $request->validated())]);
     }
 
-    public function destroy($id)
-    {
-        $question = QuizQuestion::findOrFail($id);
-        
-        $moduleItem = $question->quiz->moduleItems()->with('module.course')->first();
-        if ($moduleItem) {
-            Gate::authorize('update', $moduleItem->module->course);
-        }
-
+    public function destroy($id) {
+        $question = QuizQuestion::with('quiz')->findOrFail($id);
+        $course = $this->getCourseFromQuiz($question->quiz);
+        if ($course) Gate::authorize('update', $course);
         $this->gamificationService->deleteQuizQuestion($question);
-        
-        return response()->json(['message' => 'Question deleted successfully']);
+        return response()->json(['message' => 'Deleted']);
     }
 
-    public function updateAnswers(UpdateQuizAnswersRequest $request, $id)
-    {
-        $question = QuizQuestion::findOrFail($id);
-        $validated = $request->validated();
-        $this->gamificationService->updateQuizAnswers($question, $validated['answers']);
-
-        return response()->json(['message' => 'Answers updated successfully']);
+    public function updateAnswers(UpdateQuizAnswersRequest $request, $id) {
+        $question = QuizQuestion::with('quiz')->findOrFail($id);
+        $course = $this->getCourseFromQuiz($question->quiz);
+        if ($course) Gate::authorize('update', $course);
+        $this->gamificationService->updateQuizAnswers($question, $request->validated()['answers']);
+        return response()->json(['message' => 'Answers updated']);
     }
 }
