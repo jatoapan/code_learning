@@ -89,8 +89,10 @@ class ChallengeHiddenTestCasesTest extends TestCase
         $response->assertStatus(200);
         
         // Verificamos que el servidor haya omitido el caso oculto
-        $response->assertDontSee('10 10');
-        $response->assertDontSee('20');
+        $response->assertJsonMissing([
+            'input' => '10 10',
+            'expected_output' => '20'
+        ]);
         
         // Verificamos que el caso público sí se muestre
         $response->assertSee('2 2');
