@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
     Route::get('/health', function () { return response()->json(['status' => 'ok']); });
     Route::get('/ping-deploy', function () { 
         return response()->json([
