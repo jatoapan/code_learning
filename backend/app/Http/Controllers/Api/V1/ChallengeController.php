@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\Challenge;
 use App\Models\ModuleItem;
-use App\Models\ModuleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 

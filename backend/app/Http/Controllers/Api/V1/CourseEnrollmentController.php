@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseUser;
-use App\Models\CourseUser;
 use Illuminate\Http\Request;
 use App\Enums\EnrollmentStatus;
 use Illuminate\Support\Facades\Gate;
