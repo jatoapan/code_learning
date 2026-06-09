@@ -59,7 +59,8 @@ class ChallengeHiddenTestCasesTest extends TestCase
             'difficulty' => 'easy',
             'points' => 10,
             'language_id' => 71,
-            'language_name' => 'Python'
+            'language_name' => 'Python',
+            'status' => 'approved'
         ]);
 
         // Caso Público
