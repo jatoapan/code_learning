@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\CourseUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 
 class CourseController extends Controller
 {
@@ -45,12 +46,23 @@ class CourseController extends Controller
     public function show($id)
     {
         $course = Course::with(['modules.items.itemable', 'owner:id,name'])->findOrFail($id);
+        
+        $user = auth()->guard('api')->user();
+        $isOwner = $user && $course->owner_id === $user->id;
+        $isEnrolled = $user && \App\Models\CourseUser::where('course_id', $course->id)->where('user_id', $user->id)->exists();
+        $isAdmin = $user && ($user->hasRole('admin') || $user->hasRole('moderator'));
+
+        if ($course->status !== 'public' && !$isOwner && !$isEnrolled && !$isAdmin) {
+            return response()->json(['message' => 'Acceso denegado: El curso no es público.'], 403);
+        }
+
         return response()->json(['data' => $course]);
     }
 
     public function update(Request $request, $id)
     {
         $course = Course::findOrFail($id);
+        Gate::authorize('update', $course);
         
         $validated = $request->validate([
             'category' => 'sometimes|required|string|max:50',
@@ -72,6 +84,8 @@ class CourseController extends Controller
     public function destroy($id)
     {
         $course = Course::findOrFail($id);
+        Gate::authorize('update', $course);
+        
         $course->delete();
         return response()->json(['message' => 'Course deleted']);
     }

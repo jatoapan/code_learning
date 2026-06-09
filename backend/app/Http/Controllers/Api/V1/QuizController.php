@@ -8,6 +8,7 @@ use App\Models\Quiz;
 use App\Models\ModuleItem;
 use Illuminate\Http\Request;
 use App\Enums\QuizStatus;
+use Illuminate\Support\Facades\Gate;
 
 class QuizController extends Controller
 {
@@ -22,6 +23,7 @@ class QuizController extends Controller
         ]);
 
         $module = Module::findOrFail($moduleId);
+        Gate::authorize('update', $module->course);
 
         $quiz = new Quiz();
         $quiz->title = $validated['title'];
@@ -51,6 +53,12 @@ class QuizController extends Controller
     public function update(Request $request, $id)
     {
         $quiz = Quiz::findOrFail($id);
+        
+        $moduleItem = $quiz->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
+
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
@@ -71,6 +79,12 @@ class QuizController extends Controller
     public function destroy($id)
     {
         $quiz = Quiz::findOrFail($id);
+        
+        $moduleItem = $quiz->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
+
         $quiz->delete();
         return response()->json(['message' => 'Quiz deleted successfully']);
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Material;
 use App\Models\Module;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class MaterialController extends Controller
 {
@@ -27,6 +28,7 @@ class MaterialController extends Controller
         ]);
 
         $module = Module::findOrFail($id);
+        Gate::authorize('update', $module->course);
 
         $material = new Material();
         $material->title = $validated['title'];
@@ -58,6 +60,12 @@ class MaterialController extends Controller
     public function update(Request $request, $id)
     {
         $material = Material::findOrFail($id);
+        
+        $moduleItem = $material->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
+
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'type' => 'sometimes|required|string|in:pdf,video_link,ppt,pptx,video',
@@ -74,6 +82,12 @@ class MaterialController extends Controller
     public function destroy($id)
     {
         $material = Material::findOrFail($id);
+        
+        $moduleItem = $material->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
+
         $material->delete();
         return response()->json(['message' => 'Material deleted']);
     }
@@ -89,6 +103,19 @@ class MaterialController extends Controller
     public function download($id)
     {
         $material = Material::findOrFail($id);
+        
+        $user = auth()->user();
+        $moduleItem = $material->moduleItems()->with('module')->first();
+        if ($moduleItem) {
+            $courseId = $moduleItem->module->course_id;
+            $isEnrolled = \App\Models\CourseUser::where('course_id', $courseId)->where('user_id', $user->id)->exists();
+            $isOwner = \App\Models\Course::where('id', $courseId)->where('owner_id', $user->id)->exists();
+            $isAdmin = $user->hasRole('admin') || $user->hasRole('moderator');
+            
+            if (!$isEnrolled && !$isOwner && !$isAdmin) {
+                return response()->json(['message' => 'Acceso denegado: No estás matriculado en este curso.'], 403);
+            }
+        }
         
         // Si es un link externo (ej. Youtube), redirigimos de forma transparente
         if ($material->type === 'video_link' || str_starts_with($material->file_path, 'http')) {

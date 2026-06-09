@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class QuizQuestionController extends Controller
 {
@@ -21,6 +22,10 @@ class QuizQuestionController extends Controller
         ]);
 
         $quiz = Quiz::findOrFail($quizId);
+        $moduleItem = $quiz->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
 
         $question = new QuizQuestion();
         $question->quiz_id = $quiz->id;
@@ -44,6 +49,12 @@ class QuizQuestionController extends Controller
     public function update(Request $request, $id)
     {
         $question = QuizQuestion::findOrFail($id);
+        
+        $moduleItem = $question->quiz->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
+
         $validated = $request->validate([
             'question_text' => 'sometimes|required|string',
             'type' => 'sometimes|required|string|in:multiple_choice,true_false',
@@ -59,6 +70,12 @@ class QuizQuestionController extends Controller
     public function destroy($id)
     {
         $question = QuizQuestion::findOrFail($id);
+        
+        $moduleItem = $question->quiz->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
+
         $question->delete();
         
         return response()->json(['message' => 'Question deleted successfully']);
@@ -67,6 +84,12 @@ class QuizQuestionController extends Controller
     public function updateAnswers(Request $request, $id)
     {
         $question = QuizQuestion::findOrFail($id);
+        
+        $moduleItem = $question->quiz->moduleItems()->with('module.course')->first();
+        if ($moduleItem) {
+            Gate::authorize('update', $moduleItem->module->course);
+        }
+
         $validated = $request->validate([
             'answers' => 'required|array',
             'answers.*.id' => 'nullable|exists:quiz_answers,id',

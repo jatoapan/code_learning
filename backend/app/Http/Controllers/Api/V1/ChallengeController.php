@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\Challenge;
 use App\Models\ModuleItem;
+use App\Models\ModuleItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ChallengeController extends Controller
 {
@@ -41,6 +43,7 @@ class ChallengeController extends Controller
         ]);
 
         $module = Module::findOrFail($moduleId);
+        Gate::authorize('update', $module->course);
 
         $challenge = new Challenge();
         $challenge->module_id = $module->id;
@@ -68,6 +71,8 @@ class ChallengeController extends Controller
     public function update(Request $request, $id)
     {
         $challenge = Challenge::findOrFail($id);
+        Gate::authorize('update', $challenge->module->course);
+        
         $validated = $request->validate([
             'title' => 'string|max:255',
             'description' => 'string',
@@ -81,6 +86,8 @@ class ChallengeController extends Controller
     public function destroy($id)
     {
         $challenge = Challenge::findOrFail($id);
+        Gate::authorize('update', $challenge->module->course);
+        
         $challenge->delete();
         return response()->json(['message' => 'Deleted successfully']);
     }
