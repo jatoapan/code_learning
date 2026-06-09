@@ -551,6 +551,7 @@ Generada automáticamente por Laravel Sanctum con `php artisan vendor:publish --
 | `PATCH` | `/api/v1/modules/{id}/items-order` | Profesor / TA | Reordena los elementos en `module_items` mediante arreglo posicional. | Patrón Composite |
 | `POST` | `/api/v1/modules/{id}/materials` | Profesor / TA | Sube un PDF, PPT o PPTX (máx 50MB) o añade un video. Crea item en `module_items`. | `RF-PROF-01` |
 | `GET` | `/api/v1/materials/{id}` | Inscritos | Obtiene detalle del material y URL firmada de acceso al archivo. | `RF-STU-07` |
+| `GET` | `/api/v1/materials/{id}/download` | Inscritos | Endpoint de Alta Seguridad para streaming protegido del archivo en la bóveda privada. | `PB13` |
 | `PUT` | `/api/v1/materials/{id}` | Profesor / TA (creator) | Edita título, descripción o reemplaza el archivo del material. | `RF-PROF-01` |
 | `DELETE` | `/api/v1/materials/{id}` | Profesor / TA (creator) | Soft delete del material. | — |
 | `POST` | `/api/v1/materials/{id}/views` | Inscritos | Registra visualización del material. Suma XP local/global. | `RF-STU-07` |

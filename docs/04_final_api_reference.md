@@ -107,7 +107,8 @@ When sending JSON payloads, ensure you use the exact string values expected by t
 | DELETE| `/api/v1/modules/{id}` | Professor/TA | None |
 | PATCH | `/api/v1/modules/{id}/items-order` | Professor/TA | `{"items":[]}` |
 | GET | `/api/v1/materials/{id}` | Any Auth | None |
-| POST | `/api/v1/modules/{id}/materials` | Professor/TA | `{"title":"Mat", "type":"video_link", "content":"x", "order":1}` |
+| GET | `/api/v1/materials/{id}/download`| Any Auth | Secure document viewer streaming (PB13) |
+| POST | `/api/v1/modules/{id}/materials` | Professor/TA | `{"title":"Mat", "type":"pdf", "file":"<binary>", "order":1}` |
 | PUT | `/api/v1/materials/{id}` | Professor/TA | `{"title":"Mat Edit", "type":"video_link"}` |
 | DELETE| `/api/v1/materials/{id}` | Professor/TA | None |
 | POST | `/api/v1/materials/{id}/views` | Any Auth | Record material view |
