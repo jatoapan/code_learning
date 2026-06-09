@@ -4,7 +4,7 @@ import urllib.parse
 import json
 import uuid
 
-BASE_URL = "http://localhost:8000/api/v1"
+BASE_URL = "https://code-learning-staging.up.railway.app/api/v1"
 
 def req(method, path, token="", data=None):
     url = BASE_URL + path

@@ -4,7 +4,7 @@ import urllib.parse
 import json
 import sys
 
-BASE_URL = "http://localhost:8000/api/v1" # Ajustado para local o cambia a Railway si es necesario
+BASE_URL = "https://code-learning-staging.up.railway.app/api/v1" # Ajustado para local o cambia a Railway si es necesario
 
 PASSED = 0
 FAILED = 0

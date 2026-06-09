@@ -21,10 +21,10 @@ Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
     });
 
     // 4.1 Auth
-    Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register'])->middleware('throttle:10,1');
-    Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'login'])->middleware('throttle:5,1');
-    Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'sendResetLink'])->middleware('throttle:5,1');
-    Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword'])->middleware('throttle:5,1');
+    Route::post('/users', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'register'])->middleware('throttle:100,1');
+    Route::post('/sessions', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'login'])->middleware('throttle:100,1');
+    Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'sendResetLink'])->middleware('throttle:100,1');
+    Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword'])->middleware('throttle:100,1');
     
     // Rutas protegidas
     Route::middleware(['auth:api', \App\Http\Middleware\Idempotency::class])->group(function () {
