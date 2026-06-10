@@ -26,6 +26,11 @@ Route::prefix('v1')->middleware('throttle:1000,1')->group(function () {
     Route::post('/password-reset-links', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'sendResetLink'])->middleware('throttle:100,1');
     Route::post('/password-resets', [\App\Http\Controllers\Api\V1\AuthenticationController::class, 'resetPassword'])->middleware('throttle:100,1');
     
+    // Ruta dummy para que el correo de reseteo de contraseña funcione en el API
+    Route::get('/password-reset/{token}', function (string $token) {
+        return response()->json(['message' => 'Redirigir al frontend', 'token' => $token]);
+    })->name('password.reset');
+
     // Rutas protegidas
     Route::middleware(['auth:api', \App\Http\Middleware\Idempotency::class])->group(function () {
         // Auth & Profile
