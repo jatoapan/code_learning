@@ -15,17 +15,24 @@ class ReportController extends Controller
 
     public function store(Request $request) {
         $validated = $request->validate([
-            'reportable_type' => 'required|string',
-            'reportable_id' => 'required|string',
-            'reason' => 'required|string|in:spam,plagiarism,offensive_language,academic_dishonesty,other',
-            'details' => 'nullable|string',
+            'reportable_type' => 'required|string|in:course,forum_thread,forum_post,user',
+            'reportable_id'   => 'required|string',
+            'reason'          => 'required|string|in:spam,plagiarism,offensive_language,academic_dishonesty,other',
+            'details'         => 'nullable|string',
         ]);
 
+        $morphMap = [
+            'course'       => \App\Models\Course::class,
+            'forum_thread' => \App\Models\ForumThread::class,
+            'forum_post'   => \App\Models\ForumPost::class,
+            'user'         => \App\Models\User::class,
+        ];
+
         $report = new Report();
-        $report->reporter_id = $request->user()->id;
-        $report->reportable_type = $validated['reportable_type'];
-        $report->reportable_id = $validated['reportable_id'];
-        $report->reason = $validated['reason'];
+        $report->reporter_id     = $request->user()->id;
+        $report->reportable_type = $morphMap[$validated['reportable_type']];
+        $report->reportable_id   = $validated['reportable_id'];
+        $report->reason          = $validated['reason'];
         $report->details = $validated['details'] ?? null;
         $report->status = ReportStatus::Pending->value;
         $report->save();

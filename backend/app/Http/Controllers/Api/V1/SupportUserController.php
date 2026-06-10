@@ -36,8 +36,13 @@ class SupportUserController extends Controller
         return response()->json(['message' => 'Support ticket deleted']);
     }
 
-    public function deactivate($id) {
+    public function deactivate(Request $request, $id) {
         $user = User::findOrFail($id);
+        
+        if ($user->hasRole('admin') && !$request->user()->hasRole('admin')) {
+            abort(403, 'No puedes desactivar a un administrador.');
+        }
+
         $user->status = UserStatus::Deactivated->value;
         $user->save();
         return response()->json(['message' => 'User deactivated']);
@@ -50,8 +55,13 @@ class SupportUserController extends Controller
         ]);
 
         $user = User::findOrFail($id);
-        if ($user->id === $request->user()->id && !in_array('admin', $validated['roles'])) {
+        
+        if ($user->id === $request->user()->id && $request->user()->hasRole('admin') && !in_array('admin', $validated['roles'])) {
             abort(403, 'No puedes remover tu propio rol de administrador.');
+        }
+
+        if (!$request->user()->hasRole('admin') && in_array('admin', $validated['roles'])) {
+            abort(403, 'Solo un administrador puede asignar el rol de admin.');
         }
 
         $user->syncRoles($validated['roles']);
