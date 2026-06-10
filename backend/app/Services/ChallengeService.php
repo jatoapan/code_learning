@@ -14,12 +14,6 @@ use InvalidArgumentException;
 
 class ChallengeService
 {
-    protected $judge0;
-
-    public function __construct(Judge0Service $judge0)
-    {
-        $this->judge0 = $judge0;
-    }
 
     public function createChallenge(array $data, Module $module, string $creatorId)
     {
