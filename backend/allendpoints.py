@@ -126,7 +126,6 @@ if c_id:
     req("PUT", f"/courses/{c_id}", prof, {"title":"C1 Edit", "status":"public", "category":"programming"})
     req("GET", f"/courses/{c_id}", stu)
     req("GET", f"/courses/{c_id}/stats", prof)
-    req("GET", f"/courses/{c_id}/analytics", prof)
     req("GET", f"/courses/{c_id}/leaderboard", stu)
     req("POST", f"/courses/{c_id}/enrollments", stu, {})
     req("GET", f"/courses/{c_id}/progress", stu)
