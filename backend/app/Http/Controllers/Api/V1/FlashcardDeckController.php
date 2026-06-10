@@ -26,19 +26,19 @@ class FlashcardDeckController extends Controller
 
     public function show($id) {
         $deck = FlashcardDeck::findOrFail($id);
-        if ($deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403, 'Unauthorized');
+        Gate::authorize('view', $deck);
         return response()->json(['data' => $deck]);
     }
 
     public function update(UpdateFlashcardDeckRequest $request, $id) {
         $deck = FlashcardDeck::findOrFail($id);
-        if ($deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403, 'Unauthorized');
+        Gate::authorize('update', $deck);
         return response()->json(['message' => 'Updated', 'data' => $this->gamificationService->updateFlashcardDeck($deck, $request->validated())]);
     }
 
     public function destroy($id) {
         $deck = FlashcardDeck::findOrFail($id);
-        if ($deck->user_id !== auth()->id() && !auth()->user()->hasRole('admin')) abort(403, 'Unauthorized');
+        Gate::authorize('delete', $deck);
         $this->gamificationService->deleteFlashcardDeck($deck);
         return response()->json(['message' => 'Deleted successfully']);
     }

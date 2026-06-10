@@ -84,9 +84,4 @@ class CourseController extends Controller
         return response()->json(['message' => 'Staff removed']);
     }
 
-    public function analytics($id) {
-        $course = Course::findOrFail($id);
-        Gate::authorize('update', $course);
-        return response()->json(['message' => 'Course analytics']);
-    }
 }

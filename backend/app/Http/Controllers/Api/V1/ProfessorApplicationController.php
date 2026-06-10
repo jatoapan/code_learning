@@ -9,6 +9,8 @@ use App\Enums\ProfessorApplicationStatus;
 
 class ProfessorApplicationController extends Controller
 {
+    public function __construct(private \App\Services\ProfessorApplicationService $applicationService) {}
+
     public function index() {
         return response()->json(['data' => ProfessorApplication::with('applicant:id,name', 'reviewer:id,name')->paginate(15)]);
     }
@@ -35,6 +37,9 @@ class ProfessorApplicationController extends Controller
 
     public function assignReviewer(Request $request, $id) {
         $app = ProfessorApplication::findOrFail($id);
+        
+        abort_unless($request->user()->hasRole('admin'), 403, 'Unauthorized.');
+
         $app->reviewer_id = $request->user()->id;
         $app->status      = ProfessorApplicationStatus::UnderReview->value;
         $app->save();
@@ -42,25 +47,16 @@ class ProfessorApplicationController extends Controller
     }
 
     public function review(Request $request, $id) {
+        $app = ProfessorApplication::findOrFail($id);
+        
+        abort_unless($request->user()->hasRole('admin') || $request->user()->id === $app->reviewer_id, 403, 'Unauthorized.');
+
         $validated = $request->validate([
             'status'           => 'required|in:approved,rejected',
             'reviewer_comment' => 'nullable|string',
         ]);
 
-        $app = ProfessorApplication::findOrFail($id);
-        $app->status           = $validated['status'];
-        $app->reviewer_comment = $validated['reviewer_comment'] ?? null;
-        $app->reviewed_at      = now();
-        $app->save();
-
-        if ($validated['status'] === 'approved') {
-            $app->applicant->assignRole('professor');
-        }
-
-        // Notificar al solicitante del resultado de su aplicación
-        if ($app->applicant) {
-            $app->applicant->notify(new ApplicationReviewedNotification($app));
-        }
+        $app = $this->applicationService->reviewApplication($app, $validated);
 
         return response()->json(['message' => 'Application reviewed', 'data' => $app]);
     }
