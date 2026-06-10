@@ -19,8 +19,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \App\Http\Middleware\Idempotency::addIdempotencyHeaderToResponse();
-
         // Allow Horizon access (Security is handled by HorizonBasicAuth middleware)
         if (class_exists(\Laravel\Horizon\Horizon::class)) {
             \Laravel\Horizon\Horizon::auth(function ($request) {
