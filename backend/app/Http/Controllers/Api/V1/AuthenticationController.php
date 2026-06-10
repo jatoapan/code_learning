@@ -38,34 +38,18 @@ class AuthenticationController extends Controller
         return response()->json(['message' => 'Sesión cerrada exitosamente']);
     }
 
-    public function sendResetLink(Request $request)
+    public function sendResetLink(\App\Http\Requests\Auth\SendResetLinkRequest $request)
     {
-        $request->validate(['email' => 'required|email']);
-
-        $status = \Illuminate\Support\Facades\Password::sendResetLink(
-            $request->only('email')
-        );
+        $status = $this->authService->sendResetLink($request->validated());
 
         return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
             ? response()->json(['message' => 'Enlace de recuperación enviado'])
             : response()->json(['message' => 'No se pudo enviar el enlace'], 422);
     }
 
-    public function resetPassword(Request $request)
+    public function resetPassword(\App\Http\Requests\Auth\ResetPasswordRequest $request)
     {
-        $request->validate([
-            'token'                 => 'required|string',
-            'email'                 => 'required|email',
-            'password'              => 'required|string|min:8|confirmed',
-            'password_confirmation' => 'required|string',
-        ]);
-
-        $status = \Illuminate\Support\Facades\Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill(['password' => \Illuminate\Support\Facades\Hash::make($password)])->save();
-            }
-        );
+        $status = $this->authService->resetPassword($request->validated());
 
         return $status === \Illuminate\Support\Facades\Password::PASSWORD_RESET
             ? response()->json(['message' => 'Contraseña actualizada'])

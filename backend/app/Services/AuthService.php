@@ -38,4 +38,19 @@ class AuthService
     {
         auth('api')->logout();
     }
+
+    public function sendResetLink(array $data): string
+    {
+        return \Illuminate\Support\Facades\Password::sendResetLink($data);
+    }
+
+    public function resetPassword(array $data): string
+    {
+        return \Illuminate\Support\Facades\Password::reset(
+            $data,
+            function ($user, $password) {
+                $user->forceFill(['password' => \Illuminate\Support\Facades\Hash::make($password)])->save();
+            }
+        );
+    }
 }

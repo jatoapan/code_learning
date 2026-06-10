@@ -28,7 +28,7 @@ class QuizController extends Controller
     }
 
     public function show($id) {
-        $quiz = Quiz::with('questions')->findOrFail($id);
+        $quiz = $this->gamificationService->getQuizWithDetails($id);
         $course = $this->getCourseFromQuiz($quiz);
         if ($course) Gate::authorize('view', $course);
         return response()->json(['data' => $quiz]);
@@ -57,10 +57,9 @@ class QuizController extends Controller
     }
 
     public function showAttempt($id) {
-        $attempt = QuizAttempt::with('quiz')->findOrFail($id);
-        if ($attempt->user_id !== auth()->id() && !auth()->user()->hasRole('admin|professor|ta')) {
-            abort(403, 'No puedes ver los intentos de otros alumnos.');
-        }
+        $attempt = $this->gamificationService->getAttemptWithDetails($id);
+        Gate::authorize('view', $attempt);
+
         return response()->json(['data' => $attempt]);
     }
 

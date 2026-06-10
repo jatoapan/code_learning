@@ -103,7 +103,7 @@ Route::prefix('v1')->middleware('throttle:1000,1')->group(function () {
 
         // Professor / TA Routes
         Route::middleware('role:professor|ta')->group(function () {
-            Route::post('/courses', [\App\Http\Controllers\Api\V1\CourseController::class, 'store']);
+            Route::post('/courses', [\App\Http\Controllers\Api\V1\CourseController::class, 'store'])->middleware('role:professor');
             Route::put('/courses/{id}', [\App\Http\Controllers\Api\V1\CourseController::class, 'update']);
             Route::delete('/courses/{id}', [\App\Http\Controllers\Api\V1\CourseController::class, 'destroy']);
             Route::post('/courses/{id}/enrollments/manual', [\App\Http\Controllers\Api\V1\CourseEnrollmentController::class, 'manualEnroll']);

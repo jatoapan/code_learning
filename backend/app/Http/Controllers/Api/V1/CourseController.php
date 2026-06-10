@@ -15,8 +15,7 @@ class CourseController extends Controller
     public function __construct(private CourseService $courseService) {}
 
     public function index(Request $request) {
-        $courses = Course::with('owner:id,name,avatar_path')->paginate(15);
-        return response()->json(['data' => $courses]);
+        return response()->json(['data' => $this->courseService->getPaginatedCourses()]);
     }
 
     public function store(StoreCourseRequest $request) {
@@ -25,14 +24,14 @@ class CourseController extends Controller
     }
 
     public function show($id) {
-        $course = Course::with(['modules.items.itemable', 'owner:id,name'])->findOrFail($id);
+        $course = $this->courseService->getCourseWithDetails($id);
         Gate::authorize('view', $course);
         return response()->json(['data' => $course]);
     }
 
     public function update(UpdateCourseRequest $request, $id) {
         $course = Course::findOrFail($id);
-        Gate::authorize('update', $course);
+        Gate::authorize('manageCourse', $course);
         return response()->json([
             'message' => 'Course updated',
             'data' => $this->courseService->updateCourse($course, $request->validated())
@@ -66,19 +65,14 @@ class CourseController extends Controller
 
     public function addStaff(AddStaffRequest $request, $id) {
         $course = Course::findOrFail($id);
-        Gate::authorize('update', $course); // Mitiga IDOR
+        Gate::authorize('manageStaff', $course); // Mitiga IDOR
         $pivot = $this->courseService->addStaff($course, $request->validated());
         return response()->json(['message' => 'Staff added', 'data' => $pivot]);
     }
 
     public function removeStaff($id, $userId) {
         $course = Course::findOrFail($id);
-        Gate::authorize('update', $course);
-
-        // Mitigación: Prohibir expulsar al dueño del curso
-        if ($course->owner_id === $userId) {
-            abort(403, 'No puedes remover al dueño del curso.');
-        }
+        Gate::authorize('removeStaff', [$course, $userId]);
 
         $this->courseService->removeStaff($course, $userId);
         return response()->json(['message' => 'Staff removed']);

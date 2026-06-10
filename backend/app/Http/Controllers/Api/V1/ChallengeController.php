@@ -26,11 +26,7 @@ class ChallengeController extends Controller
         $module = Module::with('course')->findOrFail($moduleId);
         Gate::authorize('view', $module->course);
 
-        $challenges = ModuleItem::where('module_id', $module->id)
-                                ->where('itemable_type', Challenge::class)
-                                ->with('itemable')
-                                ->get()
-                                ->pluck('itemable');
+        $challenges = $this->challengeService->getChallengesForModule($module);
                                 
         return response()->json(['data' => $challenges]);
     }

@@ -35,7 +35,7 @@ class CourseEnrollmentController extends Controller
 
     public function manualEnroll(ManualEnrollRequest $request, $id) {
         $course = Course::findOrFail($id);
-        Gate::authorize('update', $course);
+        Gate::authorize('manageEnrollments', $course);
         return response()->json(['message' => 'User manually enrolled', 'data' => $this->courseService->manualEnrollUser($course, $request->validated())], 201);
     }
 }

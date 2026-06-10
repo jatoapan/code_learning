@@ -14,6 +14,14 @@ use InvalidArgumentException;
 
 class ChallengeService
 {
+    public function getChallengesForModule(Module $module)
+    {
+        return ModuleItem::where('module_id', $module->id)
+            ->where('itemable_type', Challenge::class)
+            ->with('itemable')
+            ->get()
+            ->pluck('itemable');
+    }
 
     public function createChallenge(array $data, Module $module, string $creatorId)
     {

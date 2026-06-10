@@ -45,6 +45,21 @@ class CoursePolicy
             ->exists();
     }
 
+    public function manageCourse(User $user, Course $course)
+    {
+        return $course->owner_id === $user->id || $user->hasRole('admin');
+    }
+
+    public function manageStaff(User $user, Course $course)
+    {
+        return $course->owner_id === $user->id || $user->hasRole('admin');
+    }
+
+    public function manageEnrollments(User $user, Course $course)
+    {
+        return $course->owner_id === $user->id || $user->hasRole('admin');
+    }
+
     /**
      * Determine whether the user can delete the course.
      * Solo el dueño absoluto o un admin global puede borrar el curso. Los TAs no.
@@ -52,5 +67,21 @@ class CoursePolicy
     public function delete(User $user, Course $course)
     {
         return $course->owner_id === $user->id || $user->hasRole('admin');
+    }
+
+    /**
+     * Determine whether the user can remove a staff member.
+     */
+    public function removeStaff(User $user, Course $course, string $targetUserId)
+    {
+        if (!$this->manageStaff($user, $course)) {
+            return false;
+        }
+
+        if ($course->owner_id === $targetUserId) {
+            return false;
+        }
+
+        return true;
     }
 }

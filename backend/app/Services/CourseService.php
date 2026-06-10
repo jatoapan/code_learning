@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\DB;
 
 class CourseService
 {
+    public function getPaginatedCourses(int $perPage = 15)
+    {
+        return Course::with('owner:id,name,avatar_path')->paginate($perPage);
+    }
+
+    public function getCourseWithDetails(string $id): Course
+    {
+        return Course::with(['modules.items.itemable', 'owner:id,name'])->findOrFail($id);
+    }
+
     public function createCourse(array $data, $user): Course
     {
         return DB::transaction(function () use ($data, $user) {

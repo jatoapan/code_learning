@@ -16,6 +16,16 @@ use Illuminate\Support\Facades\DB;
 
 class GamificationService
 {
+    public function getQuizWithDetails($id)
+    {
+        return Quiz::with('questions')->findOrFail($id);
+    }
+
+    public function getAttemptWithDetails($id)
+    {
+        return QuizAttempt::with('quiz')->findOrFail($id);
+    }
+
     public function createQuiz(Module $module, array $data): Quiz
     {
         return DB::transaction(function () use ($module, $data) {

@@ -166,7 +166,7 @@ if c_id and m_id:
 
 print("\n--- MODERATION ---")
 if th_id:
-    rep_res = req("POST", "/reports", stu2, {"reportable_type":"App\\Models\\ForumThread", "reportable_id":th_id, "reason":"spam", "details":"x"})
+    rep_res = req("POST", "/reports", stu2, {"reportable_type":"forum_thread", "reportable_id":th_id, "reason":"spam", "details":"x"})
     rep_id = rep_res.get("data", {}).get("id", "")
     if rep_id:
         req("GET", "/moderator/reports", admin)
@@ -219,8 +219,8 @@ print("\n--- ENDPOINTS RESTANTES FASE 2 ---")
 req("POST", "/password-reset-links", None, {"email":"admin@prolecom.com"})
 req("POST", "/password-resets", None, {"email":"admin@prolecom.com", "token":"fake", "password":"password123", "password_confirmation":"password123"})
 
-dummy_res = req("POST", "/users", None, {"name":"D", "email":"dummy@prolecom.com", "password":"password123", "password_confirmation":"password123"})
-dummy_tok = req("POST", "/sessions", None, {"email":"dummy@prolecom.com", "password":"password123", "device_name":"x"}).get("token", "")
+dummy_res = req("POST", "/users", None, {"name":"D", "email":"dummy999@gmail.com", "password":"password123", "password_confirmation":"password123"})
+dummy_tok = req("POST", "/sessions", None, {"email":"dummy999@gmail.com", "password":"password123", "device_name":"x"}).get("token", "")
 if dummy_tok:
     req("DELETE", "/users/me", dummy_tok)
 

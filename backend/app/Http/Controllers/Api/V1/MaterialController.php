@@ -64,14 +64,6 @@ class MaterialController extends Controller
             Gate::authorize('view', $moduleItem->module->course);
         }
 
-        if ($material->type === 'video_link' || str_starts_with($material->file_path, 'http')) {
-            return redirect($material->file_path);
-        }
-
-        if (!Storage::disk('local')->exists($material->file_path)) {
-            return response()->json(['message' => 'Archivo protegido no encontrado'], 404);
-        }
-
-        return Storage::disk('local')->download($material->file_path, $material->title);
+        return $this->syllabusService->downloadMaterial($material);
     }
 }

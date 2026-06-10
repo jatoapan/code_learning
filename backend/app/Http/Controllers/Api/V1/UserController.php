@@ -7,7 +7,7 @@ use App\Http\Requests\User\UpdateUserRequest;
 use App\Services\UserService;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\UserResource;
 
 class UserController extends Controller
 {
@@ -17,12 +17,7 @@ class UserController extends Controller
 
     public function me(Request $request)
     {
-        $user = $request->user();
-        $data = $user->toArray();
-        $data['avatar_url'] = $user->avatar_path
-            ? Storage::disk('public')->url($user->avatar_path)
-            : null;
-        return response()->json($data);
+        return response()->json(new UserResource($request->user()));
     }
 
     public function update(UpdateUserRequest $request)
@@ -33,12 +28,7 @@ class UserController extends Controller
             $request->file('avatar')
         );
 
-        $data = $user->toArray();
-        $data['avatar_url'] = $user->avatar_path
-            ? Storage::disk('public')->url($user->avatar_path)
-            : null;
-
-        return response()->json($data);
+        return response()->json(new UserResource($user));
     }
 
     public function deactivate(Request $request)

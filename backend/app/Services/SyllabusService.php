@@ -96,4 +96,17 @@ class SyllabusService
         // DB logic to record that the user viewed this material
         // e.g., MaterialView::firstOrCreate(['material_id' => $material->id, 'user_id' => $user->id]);
     }
+
+    public function downloadMaterial(Material $material)
+    {
+        if ($material->type === 'video_link' || str_starts_with($material->file_path, 'http')) {
+            return redirect($material->file_path);
+        }
+
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($material->file_path)) {
+            return response()->json(['message' => 'Archivo protegido no encontrado'], 404);
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('local')->download($material->file_path, $material->title);
+    }
 }
