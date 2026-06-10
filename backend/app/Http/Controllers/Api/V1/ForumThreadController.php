@@ -15,13 +15,13 @@ class ForumThreadController extends Controller
 {
     public function __construct(private ForumService $forumService) {}
 
-    private function authorizeThreadAccess(ForumThread $thread) {
+    private function authorizeThreadAccess(ForumThread $thread, $ability = 'view') {
         $course = null;
         if ($thread->forumable_type === Course::class) $course = $thread->forumable;
         if ($thread->forumable_type === Module::class) $course = $thread->forumable->course;
         if ($thread->forumable_type === Challenge::class) $course = $thread->forumable->module->course;
         
-        if ($course) Gate::authorize('view', $course);
+        if ($course) Gate::authorize($ability, $course);
     }
 
     public function indexByCourse($id) {
@@ -77,10 +77,14 @@ class ForumThreadController extends Controller
     }
 
     public function togglePin(Request $request, $id) {
-        return response()->json(['message' => 'Thread pin toggled', 'data' => $this->forumService->togglePinThread($id, $request->user())]);
+        $thread = ForumThread::findOrFail($id);
+        $this->authorizeThreadAccess($thread, 'update');
+        return response()->json(['message' => 'Thread pin toggled', 'data' => $this->forumService->togglePinThread($id)]);
     }
 
     public function lock(Request $request, $id) {
-        return response()->json(['message' => 'Thread locked', 'data' => $this->forumService->lockThread($id, $request->user())]);
+        $thread = ForumThread::findOrFail($id);
+        $this->authorizeThreadAccess($thread, 'update');
+        return response()->json(['message' => 'Thread locked', 'data' => $this->forumService->lockThread($id)]);
     }
 }

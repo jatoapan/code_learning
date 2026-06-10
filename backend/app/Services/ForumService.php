@@ -99,23 +99,17 @@ class ForumService
         $thread->delete();
     }
 
-    public function togglePinThread($id, $user)
+    public function togglePinThread($id)
     {
         $thread = ForumThread::findOrFail($id);
-        if (!$user->hasRole('admin|moderator|professor|ta')) {
-            abort(403, 'Unauthorized');
-        }
         $thread->is_pinned = !$thread->is_pinned;
         $thread->save();
         return $thread;
     }
 
-    public function lockThread($id, $user)
+    public function lockThread($id)
     {
         $thread = ForumThread::findOrFail($id);
-        if (!$user->hasRole('admin|moderator|professor|ta')) {
-            abort(403, 'Unauthorized');
-        }
         $thread->status = ThreadStatus::Locked->value;
         $thread->save();
         return $thread;
