@@ -95,7 +95,7 @@ if c_id and m_id:
     th_id = req("POST", f"/modules/{m_id}/threads", stu1, {"title": "Help!", "body": "Need help"}).get("data", {}).get("id", "")
     if th_id:
         req("PUT", f"/threads/{th_id}", stu1, {"title": "Help! Updated", "body": "Need help"})
-        req("PUT", f"/threads/{th_id}", stu2, {"title": "Hacked Thread"}, expected_status=[403])
+        req("PUT", f"/threads/{th_id}", stu2, {"title": "Hacked Thread", "body": "Intento BOLA"}, expected_status=[403])
         req("PATCH", f"/threads/{th_id}/pin", stu1, {}, expected_status=[403])
         req("PATCH", f"/threads/{th_id}/pin", admin, {})
 
