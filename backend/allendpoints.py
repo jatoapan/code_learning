@@ -219,8 +219,8 @@ print("\n--- ENDPOINTS RESTANTES FASE 2 ---")
 req("POST", "/password-reset-links", None, {"email":"admin@prolecom.com"})
 req("POST", "/password-resets", None, {"email":"admin@prolecom.com", "token":"fake", "password":"password123", "password_confirmation":"password123"})
 
-dummy_res = req("POST", "/users", None, {"name":"D", "email":"d@d.com", "password":"password123", "password_confirmation":"password123"})
-dummy_tok = req("POST", "/sessions", None, {"email":"d@d.com", "password":"password123", "device_name":"x"}).get("token", "")
+dummy_res = req("POST", "/users", None, {"name":"D", "email":"dummy@prolecom.com", "password":"password123", "password_confirmation":"password123"})
+dummy_tok = req("POST", "/sessions", None, {"email":"dummy@prolecom.com", "password":"password123", "device_name":"x"}).get("token", "")
 if dummy_tok:
     req("DELETE", "/users/me", dummy_tok)
 
@@ -237,8 +237,8 @@ app_id = req("POST", "/professor-applications", stu2, {"motivation":"x", "qualif
 if app_id:
     req("PATCH", f"/professor-applications/{app_id}/assign", admin, {"reviewer_id": 1})
 
-stu_id = req("GET", "/user", stu).get("id", 1)
-stu2_id = req("GET", "/user", stu2).get("id", 1)
+stu_id = req("GET", "/user", stu).get("id", "00000000-0000-0000-0000-000000000000")
+stu2_id = req("GET", "/user", stu2).get("id", "00000000-0000-0000-0000-000000000000")
 req("GET", "/support/users", admin)
 req("GET", f"/support/users/{stu_id}", admin)
 req("PUT", f"/support/users/{stu_id}/role", admin, {"roles":["student"]})
