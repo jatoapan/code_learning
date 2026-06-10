@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProfessorApplication;
+use App\Notifications\ApplicationReviewedNotification;
 use Illuminate\Http\Request;
 use App\Enums\ProfessorApplicationStatus;
 
@@ -18,15 +19,15 @@ class ProfessorApplicationController extends Controller
 
     public function store(Request $request) {
         $validated = $request->validate([
-            'motivation' => 'required|string',
+            'motivation'     => 'required|string',
             'qualifications' => 'required|string',
         ]);
 
         $app = new ProfessorApplication();
-        $app->applicant_id = $request->user()->id;
-        $app->motivation = $validated['motivation'];
+        $app->applicant_id  = $request->user()->id;
+        $app->motivation    = $validated['motivation'];
         $app->qualifications = $validated['qualifications'];
-        $app->status = ProfessorApplicationStatus::Pending->value;
+        $app->status        = ProfessorApplicationStatus::Pending->value;
         $app->save();
 
         return response()->json(['message' => 'Application submitted', 'data' => $app], 201);
@@ -35,25 +36,30 @@ class ProfessorApplicationController extends Controller
     public function assignReviewer(Request $request, $id) {
         $app = ProfessorApplication::findOrFail($id);
         $app->reviewer_id = $request->user()->id;
-        $app->status = ProfessorApplicationStatus::UnderReview->value;
+        $app->status      = ProfessorApplicationStatus::UnderReview->value;
         $app->save();
         return response()->json(['message' => 'Application assigned', 'data' => $app]);
     }
 
     public function review(Request $request, $id) {
         $validated = $request->validate([
-            'status' => 'required|in:approved,rejected',
+            'status'           => 'required|in:approved,rejected',
             'reviewer_comment' => 'nullable|string',
         ]);
 
         $app = ProfessorApplication::findOrFail($id);
-        $app->status = $validated['status'];
+        $app->status           = $validated['status'];
         $app->reviewer_comment = $validated['reviewer_comment'] ?? null;
-        $app->reviewed_at = now();
+        $app->reviewed_at      = now();
         $app->save();
 
         if ($validated['status'] === 'approved') {
             $app->applicant->assignRole('professor');
+        }
+
+        // Notificar al solicitante del resultado de su aplicación
+        if ($app->applicant) {
+            $app->applicant->notify(new ApplicationReviewedNotification($app));
         }
 
         return response()->json(['message' => 'Application reviewed', 'data' => $app]);

@@ -7,8 +7,11 @@ use App\Models\ForumPost;
 use App\Models\Course;
 use App\Models\Module;
 use App\Models\Challenge;
+use App\Models\User;
 use App\Enums\ThreadStatus;
 use App\Enums\PostStatus;
+use App\Notifications\NewForumReplyNotification;
+use App\Notifications\PostAcceptedNotification;
 use Illuminate\Support\Facades\DB;
 
 class ForumService
@@ -129,6 +132,15 @@ class ForumService
         $post->status = PostStatus::Visible->value;
         $post->save();
 
+        // Notificar al autor del hilo si no es el mismo que responde
+        if ($thread->user_id && $thread->user_id !== $userId) {
+            $threadAuthor = User::find($thread->user_id);
+            $replier     = User::find($userId);
+            if ($threadAuthor && $replier) {
+                $threadAuthor->notify(new NewForumReplyNotification($thread, $post, $replier->name));
+            }
+        }
+
         return $post;
     }
 
@@ -157,9 +169,9 @@ class ForumService
     public function acceptAnswer($postId, $user)
     {
         return DB::transaction(function () use ($postId, $user) {
-            $post = ForumPost::findOrFail($postId);
+            $post   = ForumPost::findOrFail($postId);
             $thread = $post->thread;
-            
+
             if ($thread->user_id !== $user->id) {
                 abort(403, 'Unauthorized');
             }
@@ -169,6 +181,14 @@ class ForumService
 
             $thread->status = ThreadStatus::Resolved->value;
             $thread->save();
+
+            // Notificar al autor del post aceptado si no es el mismo que acepta
+            if ($post->user_id && $post->user_id !== $user->id) {
+                $postAuthor = User::find($post->user_id);
+                if ($postAuthor) {
+                    $postAuthor->notify(new PostAcceptedNotification($post, $thread));
+                }
+            }
 
             return $post;
         });
