@@ -1,5 +1,5 @@
-# Prolecom — API Reference (v1)
-> Generado y verificado. Refleja la Fase 1 y Fase 2.
+# Prolecom — API Reference (v1) Completa
+> Última actualización: 2026. Documentación exhaustiva para consumo del Frontend (Sprints 1 y 2).
 
 ## Base URL
 ```
@@ -7,276 +7,456 @@ https://code-learning-staging.up.railway.app/api/v1
 ```
 
 ## Convenciones Globales
-| Header | Valor |
+| Header | Valor Obligatorio |
 |---|---|
-| `Authorization` | `Bearer <JWT>` (todas las rutas protegidas) |
+| `Authorization` | `Bearer <JWT>` (En todas las rutas protegidas) |
 | `Content-Type` | `application/json` |
 | `Accept` | `application/json` |
 
 ---
 
-## 1. Autenticación y Perfil
+## 1. Sistema Base y DevOps
 
-### `POST /users` (Registro Público)
-- **Payload:**
-  ```json
-  { "name": "Usuario", "email": "correo@gmail.com", "password": "password123", "password_confirmation": "password123" }
-  ```
-- **Response (201):**
-  ```json
-  { "message": "User registered successfully", "data": { "id": "uuid...", "name": "Usuario", "email": "correo@gmail.com", "roles": ["student"] } }
-  ```
+### `GET /health`
+- **Descripción:** Verifica que la API esté viva.
+- **Acceso:** Público
+- **Respuesta (200):** `{ "status": "ok" }`
 
-### `POST /sessions` (Login)
-- **Payload:**
-  ```json
-  { "email": "correo@gmail.com", "password": "password123", "device_name": "web" }
-  ```
-- **Response (200):**
-  ```json
-  { "token": "1|xyz..." }
-  ```
+### `GET /ping-deploy`
+- **Descripción:** Verifica carga de controladores.
+- **Acceso:** Público
+- **Respuesta (200):** `{ "auth_exists": true, "course_exists": true }`
 
-### `DELETE /sessions/current` (Logout)
-- **Auth:** Requiere Token.
-- **Response (200):** `{ "message": "Logged out" }`
-
-### `POST /password-reset-links` (Recuperar Clave)
-- **Payload:** `{ "email": "correo@gmail.com" }`
-- **Response (200):** `{ "message": "Si el correo existe, se enviará el enlace." }`
-
-### `POST /password-resets` (Cambiar Clave)
-- **Payload:** `{ "email": "correo@gmail.com", "token": "token_del_correo", "password": "new_password", "password_confirmation": "new_password" }`
-- **Response (200):** `{ "message": "Contraseña actualizada" }`
-
-### `GET /user` (Perfil Actual)
-- **Auth:** Requiere Token.
-- **Response (200):** `{ "data": { "id": "uuid...", "name": "...", "email": "...", "roles": ["student"] } }`
-
-### `PUT /user` (Actualizar Perfil)
-- **Auth:** Requiere Token.
-- **Payload:** `{ "name": "Nuevo Nombre", "avatar_path": "https://url.com/avatar.jpg" }`
-
-### `DELETE /users/me` (Eliminar Cuenta)
-- **Auth:** Requiere Token. (SoftDelete)
+### `GET /dev-reset-db`
+- **Descripción:** (SOLO STAGING) Destruye y resiembra la BD.
+- **Query Params:** `?token=railway_prolecom_secret_2026`
+- **Respuesta (200):** `{ "message": "Base de datos destruida y re-sembrada exitosamente" }`
 
 ---
 
-## 2. Cursos y Matrículas
+## 2. Autenticación (Auth)
 
-### `GET /courses` (Listar Cursos Públicos)
-- **Auth:** Requiere Token.
-- **Query Params:** `?category=programming`
-- **Response (200):**
+### `POST /users` (Registro)
+- **Acceso:** Público
+- **Payload:**
   ```json
   {
-    "data": [
-      { "id": "uuid...", "title": "...", "category": "programming", "status": "public", "owner": { "name": "Profesor" } }
+    "name": "Juan Perez",
+    "email": "juan@gmail.com",
+    "password": "password123",
+    "password_confirmation": "password123"
+  }
+  ```
+- **Respuesta (201):** `{ "message": "User registered successfully", "data": { "id": "uuid", "name": "...", "roles": ["student"] } }`
+
+### `POST /sessions` (Login)
+- **Acceso:** Público
+- **Payload:**
+  ```json
+  {
+    "email": "juan@gmail.com",
+    "password": "password123",
+    "device_name": "web-browser"
+  }
+  ```
+- **Respuesta (200):** `{ "token": "1|xyz..." }`
+
+### `DELETE /sessions/current` (Logout)
+- **Acceso:** Auth (Cualquier usuario logueado)
+- **Respuesta (200):** `{ "message": "Logged out" }`
+
+### `POST /password-reset-links`
+- **Acceso:** Público
+- **Payload:** `{ "email": "juan@gmail.com" }`
+- **Respuesta (200):** `{ "message": "Si el correo existe, se enviará el enlace." }`
+
+### `POST /password-resets`
+- **Acceso:** Público
+- **Payload:** 
+  ```json
+  { 
+    "email": "juan@gmail.com", 
+    "token": "token_del_email", 
+    "password": "new_password123", 
+    "password_confirmation": "new_password123" 
+  }
+  ```
+- **Respuesta (200):** `{ "message": "Contraseña actualizada" }`
+
+---
+
+## 3. Perfil de Usuario
+
+### `GET /user`
+- **Acceso:** Auth
+- **Respuesta (200):** `{ "data": { "id": "uuid", "name": "...", "email": "...", "roles": ["student"] } }`
+
+### `PUT /user`
+- **Acceso:** Auth
+- **Payload:** `{ "name": "Juan Actualizado", "avatar_path": "https://img.com/a.jpg" }`
+- **Respuesta (200):** `{ "data": { ... } }`
+
+### `DELETE /users/me`
+- **Acceso:** Auth
+- **Respuesta (200):** `{ "message": "Account deactivated" }` (Realiza un SoftDelete)
+
+---
+
+## 4. Solicitudes para Profesor
+
+### `POST /professor-applications`
+- **Acceso:** Auth (Estudiantes que quieren ser profesores)
+- **Payload:** `{ "motivation": "Tengo 5 años de experiencia..." }`
+- **Respuesta (201):** `{ "data": { "id": 1, "status": "pending" } }`
+
+### `GET /professor-applications/mine`
+- **Acceso:** Auth
+- **Respuesta (200):** Detalles de tu solicitud activa.
+
+---
+
+## 5. Cursos (Courses)
+
+### `GET /courses`
+- **Acceso:** Auth
+- **Query Params:** `?category=programming`
+- **Respuesta (200):** Lista paginada de cursos públicos. `{ "data": [ ... ] }`
+
+### `GET /courses/{id}`
+- **Acceso:** Auth (Inscrito) o Staff del curso.
+- **Respuesta (200):** Detalles completos del curso, incluyendo su Syllabus (Módulos).
+
+### `POST /courses`
+- **Acceso:** `professor` | `ta`
+- **Enums - Categorías:** `programming, web, mobile, data_science, devops, design`
+- **Enums - Status:** `draft, public, unlisted`
+- **Payload:**
+  ```json
+  {
+    "title": "Aprende Python",
+    "description": "Curso desde cero",
+    "status": "draft",
+    "category": "programming"
+  }
+  ```
+- **Respuesta (201):** `{ "data": { ... } }`
+
+### `PUT /courses/{id}`
+- **Acceso:** Owner del curso | `ta`
+- **Payload:** (Mismos campos que el POST, pero opcionales).
+- **Respuesta (200):** `{ "data": { ... } }`
+
+### `DELETE /courses/{id}`
+- **Acceso:** Solo el Owner del curso (`professor`).
+- **Respuesta (200):** `{ "message": "Curso eliminado" }`
+
+### `GET /courses/{id}/stats`
+- **Acceso:** Owner del curso | `ta`
+- **Respuesta (200):** `{ "total_students": 150, "top_students": [...] }`
+
+### `GET /courses/{id}/leaderboard`
+- **Acceso:** Auth (Inscrito)
+- **Respuesta (200):** `{ "leaderboard": [ { "user": "Juan", "xp": 450 } ] }`
+
+### `GET /courses/{id}/progress`
+- **Acceso:** Auth (Inscrito)
+- **Respuesta (200):** `{ "progress_percent": 35.5, "completed_items": [...] }`
+
+### `GET /courses/{id}/analytics`
+- **Acceso:** Owner del curso | `ta`
+- **Respuesta (200):** Dashboard analítico del curso.
+
+---
+
+## 6. Matrículas y Staff
+
+### `POST /courses/{id}/enrollments`
+- **Acceso:** Auth (El usuario se inscribe a sí mismo). El curso debe ser `public`.
+- **Payload:** Vacio `{}`
+- **Respuesta (201):** `{ "message": "Enrolled successfully" }`
+
+### `DELETE /courses/{id}/enrollments/me`
+- **Acceso:** Auth (Inscrito)
+- **Respuesta (200):** `{ "message": "Dropped from course" }`
+
+### `POST /courses/{id}/enrollments/manual`
+- **Acceso:** Owner del curso | `ta`
+- **Payload:** `{ "user_id": "uuid_del_usuario", "role": "student" }`
+- **Respuesta (201):** `{ "message": "Usuario inscrito manualmente" }`
+
+### `POST /courses/{id}/staff-members`
+- **Acceso:** Owner del curso
+- **Payload:** `{ "user_id": "uuid_del_usuario", "role": "ta" }`
+- **Respuesta (200):** `{ "message": "Staff member added" }`
+
+### `DELETE /courses/{id}/staff/{user_id}`
+- **Acceso:** Owner del curso
+- **Respuesta (200):** `{ "message": "Staff member removed" }`
+
+---
+
+## 7. Módulos y Materiales (Syllabus)
+
+### `POST /courses/{id}/modules`
+- **Acceso:** Owner | `ta`
+- **Payload:** `{ "title": "Bases de Python", "description": "...", "order": 1 }`
+- **Respuesta (201):** `{ "data": { ... } }`
+
+### `PUT /modules/{id}` y `DELETE /modules/{id}`
+- **Acceso:** Owner | `ta`
+
+### `PATCH /modules/{id}/items-order`
+- **Acceso:** Owner | `ta`
+- **Descripción:** Reordena los items dentro del módulo (Retos, Materiales, Quizzes).
+- **Payload:**
+  ```json
+  {
+    "items": [
+      { "id": 1, "type": "App\\Models\\Material", "order": 1 },
+      { "id": "uuid-reto", "type": "App\\Models\\Challenge", "order": 2 }
     ]
   }
   ```
 
-### `POST /courses` (Crear Curso)
-- **Auth:** `professor | ta`
-- **Categorías (Enums):** `programming, web, mobile, data_science, devops, design`
-- **Status (Enums):** `draft, public, unlisted`
-- **Payload:**
-  ```json
-  { "title": "Introducción", "description": "...", "status": "draft", "category": "programming" }
-  ```
-- **Response (201):** `{ "message": "Course created", "data": { ... } }`
-
-### `GET /courses/{id}` (Ver Curso)
-- **Auth:** Inscrito o Owner. Retorna detalles y syllabus.
-
-### `PUT /courses/{id}` y `DELETE /courses/{id}`
-- **Auth:** `professor | ta` (DELETE solo Owner).
-- **Payload PUT:** `{ "title": "Nuevo", "status": "public", "category": "web" }`
-
-### `GET /courses/{id}/stats`
-- **Auth:** `professor | ta`
-- **Response (200):** `{ "total_students": 5, "average_progress": 20.5, "top_students": [...] }`
-
-### `GET /courses/{id}/leaderboard` y `GET /courses/{id}/progress`
-- **Auth:** Inscrito.
-- **Response Leaderboard:** `{ "leaderboard": [ { "user": "Juan", "xp": 100 } ] }`
-
-### `POST /courses/{id}/enrollments` (Auto-Inscripción)
-- **Auth:** Token. Solo para cursos `public`.
-- **Response (201):** `{ "message": "Enrolled successfully" }`
-
-### `POST /courses/{id}/enrollments/manual` y `POST /courses/{id}/staff-members`
-- **Auth:** `professor | ta`
-- **Payload:** `{ "user_id": "uuid...", "role": "student" }` (o `role: "ta"`)
-- **Response (201/200):** Agrega manualmente a un usuario.
-
-### `DELETE /courses/{id}/enrollments/me` y `DELETE /courses/{id}/staff/{user_id}`
-- **Auth:** Token. Salir del curso o remover TA.
-
----
-
-## 3. Módulos y Materiales (Syllabus)
-
-### `POST /courses/{id}/modules`
-- **Auth:** `professor | ta`
-- **Payload:** `{ "title": "Módulo 1", "description": "Bases", "order": 1 }`
-- **Response (201):** `{ "data": { "id": 1, "title": "Módulo 1" } }`
-
-### `PUT /modules/{id}` y `DELETE /modules/{id}`
-- **Auth:** `professor | ta`. Edita/Elimina el módulo.
-
-### `PATCH /modules/{id}/items-order`
-- **Auth:** `professor | ta`
-- **Payload:**
-  ```json
-  { "items": [ { "id": 1, "type": "material", "order": 1 } ] }
-  ```
-
 ### `POST /modules/{id}/materials`
-- **Auth:** `professor | ta`
-- **Tipos (Enums):** `pdf, video_link, ppt, pptx`
-- **Payload:**
-  ```json
-  { "title": "Clase 1", "type": "video_link", "content": "https://youtube.com/..." }
-  ```
+- **Acceso:** Owner | `ta`
+- **Enums - Type:** `pdf, video_link, ppt, pptx`
+- **Payload:** `{ "title": "Video 1", "type": "video_link", "content": "https://youtube..." }`
+- **Respuesta (201):** `{ "data": { ... } }`
 
-### `GET /materials/{id}` y `GET /materials/{id}/download`
-- **Auth:** Inscrito. Download redirige a S3/YouTube o descarga binaria.
+### `PUT /materials/{id}` y `DELETE /materials/{id}`
+- **Acceso:** Owner | `ta`
+
+### `GET /materials/{id}`
+- **Acceso:** Inscrito.
+
+### `GET /materials/{id}/download`
+- **Acceso:** Inscrito.
+- **Respuesta (200 o 302):** Descarga el archivo (si es PDF/PPT) o redirige (302) al link de video.
 
 ### `POST /materials/{id}/views`
-- **Auth:** Inscrito. Registra vista y otorga XP.
+- **Acceso:** Inscrito.
+- **Descripción:** Registra que el estudiante vio el material y le otorga XP.
 
 ---
 
-## 4. Retos Interactivos (Challenges)
+## 8. Retos de Programación (Judge0)
+
+### `GET /languages`
+- **Acceso:** Auth
+- **Respuesta (200):** Retorna los IDs de lenguajes de Judge0 (ej. `71` = Python).
+
+### `GET /modules/{id}/challenges`
+- **Acceso:** Owner | `ta`
+- **Respuesta (200):** Lista los retos de un módulo (incluye borradores).
 
 ### `POST /modules/{id}/challenges`
-- **Auth:** `professor | ta`
-- **Dificultad (Enums):** `easy, medium, hard`
-- **Status (Enums):** `draft, pending_review, approved, rejected`
+- **Acceso:** Owner | `ta`
+- **Enums - Difficulty:** `easy, medium, hard`
+- **Enums - Status:** `draft, pending_review, approved, rejected`
 - **Payload:**
   ```json
-  { "title": "Suma", "description": "...", "difficulty": "easy", "points": 50, "language_id": 71, "language_name": "python", "status": "draft" }
+  {
+    "title": "Two Sum",
+    "description": "Encuentra dos números...",
+    "difficulty": "medium",
+    "points": 100,
+    "language_id": 71,
+    "language_name": "python",
+    "status": "draft"
+  }
   ```
+- **Respuesta (201):** `{ "data": { ... } }`
 
-### `GET /challenges/{id}` y `PUT /challenges/{id}` y `DELETE /challenges/{id}`
-- **Auth:** Inscrito (GET solo `approved`). PUT/DELETE requiere `professor | ta`.
+### `GET /challenges/{id}`, `PUT /challenges/{id}`, `DELETE /challenges/{id}`
+- **Acceso:** GET es para inscritos (solo ven `approved`). PUT/DELETE para Owner | `ta`.
 
 ### `POST /challenges/{id}/test-cases`
-- **Auth:** `professor | ta`
+- **Acceso:** Owner | `ta`
 - **Payload:** `{ "input": "2,2", "expected_output": "4", "is_hidden": true }`
 
-### `POST /challenges/{id}/attempts` (Ejecutar en Judge0)
-- **Auth:** Inscrito.
-- **Payload:** `{ "submitted_code": "print(4)", "language_id": 71 }`
-- **Response (201):**
-  ```json
-  { "status": "passed", "score": 50, "details": [...] }
-  ```
+### `PUT /challenge-test-cases/{id}` y `DELETE /challenge-test-cases/{id}`
+- **Acceso:** Owner | `ta`
+
+### `POST /challenges/{id}/attempts`
+- **Acceso:** Inscrito.
+- **Descripción:** Envía el código a Judge0 para evaluación real.
+- **Payload:** `{ "submitted_code": "print(int(input()) * 2)", "language_id": 71 }`
+- **Respuesta (201):** `{ "status": "passed", "score": 100, "details": "..." }`
 
 ### `GET /challenges/{id}/attempts`
-- **Auth:** Inscrito (solo suyos) o Prof/TA (todos).
+- **Acceso:** Inscrito (ve los suyos) | Owner (ve todos).
+
+### `POST /challenge-attempts/{id}/feedback`
+- **Acceso:** Owner | `ta`. Da retroalimentación manual al código del estudiante.
+- **Payload:** `{ "feedback": "Mejora tu complejidad algorítmica." }`
 
 ---
 
-## 5. Quizzes y Flashcards
+## 9. Quizzes y Flashcards
 
 ### `POST /modules/{id}/quizzes`
-- **Auth:** `professor | ta`
-- **Modos:** `practice, exam`
-- **Payload:** `{ "title": "Examen", "mode": "exam", "passing_score": 70, "time_limit_minutes": 60 }`
+- **Acceso:** Owner | `ta`
+- **Enums - Mode:** `practice, exam`
+- **Payload:** `{ "title": "Examen", "mode": "exam", "passing_score": 70, "time_limit_minutes": 30 }`
+
+### `GET /quizzes/{id}`, `PUT /quizzes/{id}`, `DELETE /quizzes/{id}`
+- **Acceso:** GET para inscritos.
 
 ### `POST /quizzes/{id}/questions`
-- **Auth:** `professor | ta`
-- **Tipos:** `multiple_choice, true_false`
-- **Payload:** `{ "question_text": "A?", "type": "multiple_choice", "points": 10, "options": ["A","B"], "correct_answer": "A" }`
-
-### `POST /quizzes/{id}/attempts`
-- **Auth:** Inscrito.
-- **Payload:** `{ "answers": [ { "quiz_question_id": 1, "answer_text": "A" } ] }`
-- **Response (201):** `{ "score": 100, "passed": true }`
-
-### `POST /practice-quizzes`
-- **Auth:** Token.
-- **Payload:** `{ "quiz_id": 1, "question_count": 5 }` — Quiz aleatorio para practicar.
-
-### `POST /flashcard-decks` y `POST /flashcard-decks/{id}/flashcards`
-- **Auth:** Token.
-- **Payload (Deck):** `{ "title": "AWS" }`
-- **Payload (Card):** `{ "question_text": "EC2?", "answer_text": "Servidor" }`
-
-### `GET /flashcard-decks/{id}/due-flashcards`
-- **Auth:** Owner. Obtiene flashcards que requieren repaso hoy (SM-2 Algorithm).
-
-### `PATCH /flashcards/{id}` (Repaso SM-2)
-- **Auth:** Owner.
-- **Payload:** `{ "quality": 4 }` (0=Fallo, 5=Perfecto). Calcula el `interval` y `next_review_at`.
-
----
-
-## 6. Foros y Q&A
-
-### `POST /courses/{id}/threads`, `/modules/{id}/threads`, `/challenges/{id}/threads`
-- **Auth:** Inscrito.
-- **Payload:** `{ "title": "Tengo un problema", "body": "En la línea 5..." }`
-
-### `POST /threads/{id}/posts` (Responder)
-- **Auth:** Inscrito.
-- **Payload:** `{ "body": "Prueba haciendo esto..." }`
-
-### `PUT /threads/{id}/votes/me` y `PUT /posts/{id}/votes/me` (Votar)
-- **Auth:** Inscrito.
-- **Payload:** `{ "value": 1 }` (1 para Upvote, -1 para Downvote).
-
-### `PATCH /posts/{id}/accept`
-- **Auth:** Autor del hilo.
-- **Payload:** `{}` (Marca el post como solución correcta).
-
-### `PATCH /threads/{id}/pin` y `PATCH /threads/{id}/lock`
-- **Auth:** `moderator | admin`. Fija o cierra el hilo.
-
----
-
-## 7. Moderación, Reportes y Administración
-
-### `POST /reports`
-- **Auth:** Token.
-- **Reportables:** `course, forum_thread, forum_post, user`
-- **Razones:** `spam, plagiarism, offensive_language, academic_dishonesty, other`
+- **Acceso:** Owner | `ta`
+- **Enums - Type:** `multiple_choice, true_false`
 - **Payload:**
   ```json
-  { "reportable_type": "forum_thread", "reportable_id": "uuid...", "reason": "spam", "details": "Enlace fraudulento" }
+  {
+    "question_text": "¿Qué es HTML?",
+    "type": "multiple_choice",
+    "points": 10,
+    "options": ["Un lenguaje", "Un protocolo"],
+    "correct_answer": "Un lenguaje"
+  }
   ```
 
-### `GET /moderator/reports` y `PATCH /reports/{id}/resolve`
-- **Auth:** `moderator | admin`.
+### `PUT /quiz-questions/{id}` y `DELETE /quiz-questions/{id}`
+- **Acceso:** Owner | `ta`
 
-### `POST /professor-applications` y `PATCH /professor-applications/{id}/review`
-- **Auth:** Token (para POST), `admin` (para PATCH).
-- **Payload:** `{ "motivation": "Quiero ser prof." }`
+### `PUT /quiz-questions/{id}/answers`
+- **Acceso:** Owner | `ta` (Actualiza las opciones de respuesta en lote).
 
-### `PUT /support/users/{id}/role` y `PATCH /support/users/{id}/deactivate`
-- **Auth:** `admin | support`. Modifica roles (`student, professor, ta, moderator, support, admin`) o banea usuarios.
+### `POST /quizzes/{id}/attempts`
+- **Acceso:** Inscrito
+- **Payload:**
+  ```json
+  {
+    "answers": [
+      { "quiz_question_id": 1, "answer_text": "Un lenguaje" }
+    ]
+  }
+  ```
+- **Respuesta (201):** `{ "score": 10, "passed": true }`
 
-### `GET /admin/settings` y `PUT /admin/settings/{key}`
-- **Auth:** `admin`. Ajusta variables globales de la API.
+### `GET /quiz-attempts/{id}`
+- **Acceso:** Inscrito.
+
+### `POST /practice-quizzes`
+- **Acceso:** Auth. Genera un quiz aleatorio.
+- **Payload:** `{ "quiz_id": 1, "question_count": 5 }`
+
+### `GET /flashcard-decks` y `POST /flashcard-decks`
+- **Acceso:** Auth
+- **Payload (POST):** `{ "title": "Mi Mazo AWS", "description": "...", "module_id": null }`
+
+### `GET /flashcard-decks/{id}`, `PUT /flashcard-decks/{id}`, `DELETE /flashcard-decks/{id}`
+- **Acceso:** Owner del mazo.
+
+### `POST /flashcard-decks/{id}/flashcards`
+- **Acceso:** Owner del mazo.
+- **Payload:** `{ "question_text": "EC2?", "answer_text": "Servidor" }`
+
+### `PUT /flashcards/{id}` y `DELETE /flashcards/{id}`
+- **Acceso:** Owner del mazo.
+
+### `POST /flashcard-imports`
+- **Acceso:** Auth. Importa preguntas falladas de un quiz a un mazo.
+- **Payload:** `{ "quiz_id": 1, "deck_id": 1 }`
+
+### `GET /flashcard-decks/{id}/due-flashcards`
+- **Acceso:** Owner. Obtiene flashcards que requieren repaso hoy (SM-2 Algorithm).
+
+### `PATCH /flashcards/{id}` (Repaso SM-2)
+- **Acceso:** Owner.
+- **Payload:** `{ "quality": 4 }` (0=Fallo, 5=Perfecto).
 
 ---
 
-## 8. Notificaciones
+## 10. Foros de Q&A
 
-### `GET /notifications` y `GET /notifications/unread-count`
-- **Auth:** Token.
+### Listar Hilos
+- **`GET /courses/{id}/threads`**
+- **`GET /modules/{id}/threads`**
+- **`GET /challenges/{id}/threads`**
+- **Acceso:** Inscritos.
 
-### `PATCH /notifications` y `PATCH /notifications/{id}`
-- **Auth:** Token. Marca notificaciones como leídas.
+### Crear Hilos
+- **`POST /courses/{id}/threads`**
+- **`POST /modules/{id}/threads`**
+- **`POST /challenges/{id}/threads`**
+- **Payload:** `{ "title": "Ayuda con Python", "body": "No entiendo loops." }`
+
+### `GET /threads/{id}`, `PUT /threads/{id}`, `DELETE /threads/{id}`
+- **Acceso:** Inscritos / Moderadores.
+
+### `POST /threads/{id}/posts` (Responder Hilo)
+- **Acceso:** Inscritos.
+- **Payload:** `{ "body": "Usa un ciclo for." }`
+
+### `PUT /posts/{id}`, `DELETE /posts/{id}`
+- **Acceso:** Autor del post / Moderador.
+
+### Votaciones
+- **`PUT /threads/{id}/votes/me`**
+- **`PUT /posts/{id}/votes/me`**
+- **Payload:** `{ "value": 1 }` (1 Upvote, -1 Downvote).
+
+### `PATCH /posts/{id}/accept`
+- **Acceso:** Autor del hilo. (Marca respuesta como correcta).
 
 ---
 
-## 9. Utilidades DevOps
+## 11. Moderación y Reportes
 
-### `GET /health` y `GET /ping-deploy`
-- **Auth:** Ninguna. (Monitor de salud API).
+### `POST /reports`
+- **Acceso:** Auth
+- **Enums - Type:** `course, forum_thread, forum_post, user` (Deben mandarse tal cual, ej: `forum_thread`).
+- **Enums - Reason:** `spam, plagiarism, offensive_language, academic_dishonesty, other`
+- **Payload:**
+  ```json
+  { "reportable_type": "forum_thread", "reportable_id": "uuid-hilo", "reason": "spam", "details": "Enlace dudoso" }
+  ```
 
-### `GET /dev-reset-db?token=<secreto>`
-- **Auth:** Exclusivo de entorno Staging/Testing. Limpia la base de datos por completo.
+### Moderadores y Admins (`moderator`, `admin`)
+- **`GET /moderator/reports`**: Lista de reportes.
+- **`PATCH /reports/{id}/resolve`**: Marca como resuelto.
+- **`PATCH /reports/{id}/escalate`**: Escala a admin superior.
+- **`PATCH /threads/{id}/pin`**: Fija un hilo en el foro.
+- **`PATCH /threads/{id}/lock`**: Bloquea un hilo para no recibir más respuestas.
+- **`GET /moderator/response-templates`**: Plantillas pre-hechas para respuestas de moderación.
+
+---
+
+## 12. Administración Global y Soporte
+
+### Solicitudes de Profesores
+- **`GET /professor-applications`** (`support|admin`)
+- **`PATCH /professor-applications/{id}/assign`** (`support|admin`): `{ "reviewer_id": "uuid" }`
+- **`PATCH /professor-applications/{id}/review`** (`support|admin`): `{ "status": "approved" }`
+
+### Gestión de Usuarios (`support|admin`)
+- **`GET /support/users`**: Lista todos.
+- **`GET /support/users/{id}`**: Perfil.
+- **`PATCH /support/users/{id}/deactivate`**: Banea usuario.
+- **`PUT /support/users/{id}/role`**: `{ "roles": ["student", "moderator"] }`
+
+### Logs y Ajustes (`admin`)
+- **`GET /admin/logs`**: Registro de auditoría.
+- **`GET /admin/settings`**: Ajustes del sistema.
+- **`PUT /admin/settings/{key}`**: `{ "value": "nuevo valor" }`
+- **`POST /admin/response-templates`**: Crear plantillas de soporte.
+- **`PUT /admin/response-templates/{id}`**: Editar plantillas.
+- **`DELETE /admin/response-templates/{id}`**: Eliminar plantillas.
+
+---
+
+## 13. Notificaciones
+
+### `GET /notifications`
+- **Acceso:** Auth. Lista notificaciones del usuario.
+
+### `GET /notifications/unread-count`
+- **Acceso:** Auth. `{ "count": 5 }`
+
+### `PATCH /notifications`
+- **Acceso:** Auth. Marca todas como leídas.
+
+### `PATCH /notifications/{id}`
+- **Acceso:** Auth. Marca una como leída.
