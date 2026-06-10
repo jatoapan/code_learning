@@ -8,8 +8,8 @@ use App\Models\ModuleItem;
 use App\Models\ChallengeTestCase;
 use App\Models\ChallengeAttempt;
 use App\Enums\ChallengeAttemptStatus;
+use App\Jobs\ProcessChallengeAttempt;
 use Illuminate\Support\Facades\DB;
-use App\Services\Judge0Service;
 use InvalidArgumentException;
 
 class ChallengeService
@@ -86,78 +86,30 @@ class ChallengeService
         $testCase->delete();
     }
 
-    public function submitAttempt(Challenge $challenge, array $data, string $userId)
+    /**
+     * Crea un attempt en estado 'pending' y despacha el Job al Queue Worker.
+     * El resultado llegará al Frontend vía Reverb WebSocket cuando termine.
+     */
+    public function submitAttempt(Challenge $challenge, array $data, string $userId): ChallengeAttempt
     {
         if ($challenge->testCases->isEmpty()) {
             throw new InvalidArgumentException('This challenge has no test cases.');
         }
 
-        $passed = 0;
-        $total = $challenge->testCases->count();
-        $status = ChallengeAttemptStatus::Accepted->value;
-        $stdout = '';
-        $stderr = '';
-        $execTime = 0.0;
-        $execMemory = 0;
-
-        foreach ($challenge->testCases as $testCase) {
-            $result = $this->judge0->submitCode(
-                $data['language_id'],
-                $data['submitted_code'],
-                $testCase->expected_output,
-                $testCase->input
-            );
-
-            if (isset($result['error'])) {
-                $status = ChallengeAttemptStatus::CompileError->value;
-                $stderr = $result['error'];
-                break;
-            }
-
-            $judgeStatus = $result['status']['id'] ?? 0;
-            
-            $execTime += (float) ($result['time'] ?? 0);
-            $execMemory += (int) ($result['memory'] ?? 0);
-
-            if ($judgeStatus === 3) {
-                $passed++;
-            } elseif ($judgeStatus === 4) {
-                $status = ChallengeAttemptStatus::WrongAnswer->value;
-            } elseif ($judgeStatus === 5) {
-                $status = ChallengeAttemptStatus::TimeLimitExceeded->value;
-            } elseif ($judgeStatus === 6) {
-                $status = ChallengeAttemptStatus::CompileError->value;
-                $stderr = $result['compile_output'] ?? '';
-                break;
-            } else {
-                $status = ChallengeAttemptStatus::RuntimeError->value;
-                $stderr = $result['stderr'] ?? 'Runtime Error';
-                break;
-            }
-
-            $stdout .= ($result['stdout'] ?? '') . "\n";
-        }
-
-        if ($passed < $total && $status === ChallengeAttemptStatus::Accepted->value) {
-            $status = ChallengeAttemptStatus::WrongAnswer->value;
-        }
-
-        $points = ($status === ChallengeAttemptStatus::Accepted->value) ? $challenge->points : 0;
-
+        // Crear attempt inmediatamente con status pending
         $attempt = new ChallengeAttempt();
-        $attempt->user_id = $userId;
-        $attempt->challenge_id = $challenge->id;
+        $attempt->user_id        = $userId;
+        $attempt->challenge_id   = $challenge->id;
         $attempt->submitted_code = $data['submitted_code'];
-        $attempt->language_id = $data['language_id'];
-        $attempt->status = $status;
-        $attempt->test_cases_passed = $passed;
-        $attempt->test_cases_total = $total;
-        $attempt->points_awarded = $points;
-        $attempt->execution_time_ms = $execTime * 1000;
-        $attempt->execution_memory_kb = $execMemory;
-        $attempt->stdout = $stdout;
-        $attempt->stderr = $stderr;
+        $attempt->language_id    = $data['language_id'];
+        $attempt->status         = ChallengeAttemptStatus::Pending->value;
+        $attempt->test_cases_passed = 0;
+        $attempt->test_cases_total  = $challenge->testCases->count();
+        $attempt->points_awarded    = 0;
         $attempt->save();
+
+        // Despachar Job al Queue Worker para evaluación asíncrona
+        ProcessChallengeAttempt::dispatch($attempt, $challenge, $data);
 
         return $attempt;
     }
