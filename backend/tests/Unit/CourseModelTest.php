@@ -29,7 +29,7 @@ class CourseModelTest extends TestCase
         ]);
 
         $this->assertEquals('Software Engineering', $course->title);
-        $this->assertEquals('draft', $course->status);
+        $this->assertEquals('draft', $course->status->value);
         $this->assertEquals($professor->id, $course->owner_id);
     }
 }

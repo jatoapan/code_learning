@@ -44,7 +44,7 @@ class ChallengeModelTest extends TestCase
             'test_cases' => [['input' => '[2,7,11,15], 9', 'output' => '[0,1]', 'is_hidden' => true]],
         ]);
 
-        $this->assertEquals('easy', $challenge->difficulty);
+        $this->assertEquals('easy', $challenge->difficulty->value);
         $this->assertTrue($challenge->test_cases[0]['is_hidden']); // Hidden test case validation
     }
 }
