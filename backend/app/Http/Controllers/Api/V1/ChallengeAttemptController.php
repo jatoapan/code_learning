@@ -15,12 +15,18 @@ class ChallengeAttemptController extends Controller
 {
     public function __construct(private ChallengeService $challengeService) {}
 
-    public function index($id) {
+    public function index(Request $request, $id) {
         $challenge = Challenge::with('module.course')->findOrFail($id);
-        Gate::authorize('update', $challenge->module->course);
+        Gate::authorize('view', $challenge->module->course); // Basta con poder VER el curso
 
-        $attempts = ChallengeAttempt::where('challenge_id', $id)->with('user:id,name')->get();
-        return response()->json(['data' => $attempts]);
+        $query = ChallengeAttempt::where('challenge_id', $id)->with('user:id,name');
+
+        // Si NO es staff (no puede actualizar el curso), solo ve sus propios intentos
+        if (!\Illuminate\Support\Facades\Gate::allows('update', $challenge->module->course)) {
+            $query->where('user_id', $request->user()->id);
+        }
+
+        return response()->json(['data' => $query->get()]);
     }
 
     public function submit(SubmitChallengeAttemptRequest $request, $challengeId) {

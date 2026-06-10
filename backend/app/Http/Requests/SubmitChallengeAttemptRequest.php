@@ -14,8 +14,8 @@ class SubmitChallengeAttemptRequest extends FormRequest
     public function rules()
     {
         return [
-            'submitted_code' => 'required|string',
-            'language_id' => 'required|integer',
+            'submitted_code' => 'required|string|max:65535', // Max 64KB
+            'language_id'    => 'required|integer',
         ];
     }
 }
