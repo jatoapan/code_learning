@@ -22,8 +22,7 @@ COPY . /var/www
 # 4. Instalar dependencias e inyectar permisos
 RUN rm -f composer.lock \
     && composer install --optimize-autoloader --no-dev \
-    && php artisan horizon:publish \
-    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public/vendor
+    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # 5. Copiar configuración de Supervisor
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
