@@ -39,12 +39,36 @@ class AuthenticationController extends Controller
     }
 
     public function sendResetLink(Request $request)
-    { 
-        return response()->json(['message' => 'Enlace de recuperación enviado']); 
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = \Illuminate\Support\Facades\Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
+            ? response()->json(['message' => 'Enlace de recuperación enviado'])
+            : response()->json(['message' => 'No se pudo enviar el enlace'], 422);
     }
-    
+
     public function resetPassword(Request $request)
-    { 
-        return response()->json(['message' => 'Contraseña actualizada']); 
+    {
+        $request->validate([
+            'token'                 => 'required|string',
+            'email'                 => 'required|email',
+            'password'              => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required|string',
+        ]);
+
+        $status = \Illuminate\Support\Facades\Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill(['password' => \Illuminate\Support\Facades\Hash::make($password)])->save();
+            }
+        );
+
+        return $status === \Illuminate\Support\Facades\Password::PASSWORD_RESET
+            ? response()->json(['message' => 'Contraseña actualizada'])
+            : response()->json(['message' => 'Token inválido o expirado'], 422);
     }
 }

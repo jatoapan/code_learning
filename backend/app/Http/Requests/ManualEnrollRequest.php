@@ -15,7 +15,7 @@ class ManualEnrollRequest extends FormRequest
     {
         return [
             'user_id' => 'required|uuid',
-            'role' => 'required|string|in:student,ta,professor'
+            'role'    => 'required|string|in:student'
         ];
     }
 }

@@ -41,7 +41,7 @@ class CourseController extends Controller
 
     public function destroy($id) {
         $course = Course::findOrFail($id);
-        Gate::authorize('update', $course);
+        Gate::authorize('delete', $course); // Corregido: solo el owner puede borrar
         $this->courseService->deleteCourse($course);
         return response()->json(['message' => 'Course deleted']);
     }
@@ -73,7 +73,13 @@ class CourseController extends Controller
 
     public function removeStaff($id, $userId) {
         $course = Course::findOrFail($id);
-        Gate::authorize('update', $course); // Mitiga IDOR
+        Gate::authorize('update', $course);
+
+        // Mitigación: Prohibir expulsar al dueño del curso
+        if ($course->owner_id === $userId) {
+            abort(403, 'No puedes remover al dueño del curso.');
+        }
+
         $this->courseService->removeStaff($course, $userId);
         return response()->json(['message' => 'Staff removed']);
     }

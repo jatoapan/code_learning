@@ -44,4 +44,13 @@ class CoursePolicy
             ->where('user_id', $user->id)
             ->exists();
     }
+
+    /**
+     * Determine whether the user can delete the course.
+     * Solo el dueño absoluto o un admin global puede borrar el curso. Los TAs no.
+     */
+    public function delete(User $user, Course $course)
+    {
+        return $course->owner_id === $user->id || $user->hasRole('admin');
+    }
 }
