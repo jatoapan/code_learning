@@ -44,7 +44,7 @@ class ChallengeModelTest extends TestCase
             'creator_id' => $professor->id,
             'language_id' => 71, // dummy
             'language_name' => 'python',
-            'status' => 'published',
+            'status' => 'approved',
         ]);
 
         $testCase = \App\Models\ChallengeTestCase::create([
